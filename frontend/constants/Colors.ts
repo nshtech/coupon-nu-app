@@ -1,6 +1,17 @@
 const tintColorLight = '#2f95dc';
 const tintColorDark = '#fff';
 
+export const NU_PURPLE = '#4E2A84';
+export const PURPLE_80 = '#684C96';
+export const PURPLE_70 = '#765DA0';
+export const PURPLE_60 = '#836EAA';
+export const PURPLE_50 = '#9380B6';
+export const PURPLE_40 = '#A495C3';
+export const PURPLE_30 = '#B6ACD1';
+export const PURPLE_20 = '#CCC4DF';
+
+
+
 export default {
   light: {
     text: '#000',
