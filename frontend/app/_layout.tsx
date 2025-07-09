@@ -3,9 +3,11 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import { SUBSCRIBED } from '@/constants/Subscribed';
+import PaywallScreen from '@/components/PaywallScreen';
 
 import { useColorScheme } from '@/components/useColorScheme';
 
@@ -30,6 +32,8 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
 
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
@@ -45,6 +49,14 @@ export default function RootLayout() {
     return null;
   }
 
+  // return the paywall BEFORE rendering the app
+  // trigger a rerender of the app when the user is subscribed, returning rootlayoutnav
+  if (!isSubscribed) {
+    return <PaywallScreen setIsSubscribed={setIsSubscribed} />;
+  }
+
+
+
   return <RootLayoutNav />;
 }
 
@@ -56,7 +68,7 @@ function RootLayoutNav() {
         <StatusBar style="dark" />
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+          {/* <Stack.Screen name="modal" options={{ presentation: 'modal' }} /> */}
         </Stack>
       </ThemeProvider>
 
