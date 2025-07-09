@@ -14,7 +14,7 @@ export default function TabOneScreen() {
         siem!
       </Text>
 
-      <Text className="text-3xl text-black font-inter">yo</Text>
+      <Text className="text-3xl text-black font-inter-medium">yo</Text>
     </View>
   );
 }

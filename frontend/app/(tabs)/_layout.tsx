@@ -1,10 +1,7 @@
 import React from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
-import { Pressable } from 'react-native';
+import { Tabs } from 'expo-router';
 
-import Colors, { NU_PURPLE } from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
+import { NU_PURPLE, PURPLE_80 } from '@/constants/Colors';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 
 import { TicketCheck, UserRound } from 'lucide-react-native';
@@ -24,26 +21,40 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'My Coupons',
+          headerTitleStyle: {
+            fontFamily: 'Inter-Bold',
+            fontSize: 32,
+            color: PURPLE_80,
+          },
           headerTitle: 'Coupon NU',
           tabBarIcon: ({ color }) => <TicketCheck size={28} color={color} />,
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                <FontAwesome
-                  name="info-circle"
-                  size={25}
-                  color={'black'}
-                  className="mr-[15px]"
-                />
-              </Pressable>
-            </Link>
-          ),
+
+
+          // info icon in top header
+          
+          // headerRight: () => (
+          //   <Link href="/modal" asChild>
+          //     <Pressable>
+          //       <FontAwesome
+          //         name="info-circle"
+          //         size={25}
+          //         color={'black'}
+          //         className="mr-[15px]"
+          //       />
+          //     </Pressable>
+          //   </Link>
+          // ),
         }}
       />
       <Tabs.Screen
         name="two"
         options={{
           title: 'My Account',
+          headerTitleStyle: {
+            fontFamily: 'Inter-Bold',
+            fontSize: 32,
+            color: PURPLE_80,
+          },
           headerTitle: 'Coupon NU',
           tabBarIcon: ({ color }) => <UserRound size={28} color={color} />,
         }}
