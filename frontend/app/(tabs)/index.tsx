@@ -5,13 +5,13 @@ export default function TabOneScreen() {
   return (
     <View className="flex-1 items-center bg-white justify-center">
       <Text className="text-2xl text-blue-500 font-bold">
-        siema!
+        TEST!
       </Text>
       <Text className="text-[32px] text-black">
-        siem!
+        test!
       </Text>
       <Text className="text-[32px] text-black font-inter-medium">
-        siem!
+        test!
       </Text>
 
       <Text className="text-3xl text-black font-inter-medium">yo</Text>

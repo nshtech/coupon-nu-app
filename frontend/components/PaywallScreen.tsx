@@ -9,7 +9,7 @@ export default function PaywallScreen({ setIsSubscribed }: PaywallScreenProps) {
         <View className="flex-1 items-center justify-center bg-white">
             <Text className="text-2xl text-black font-inter-medium">Paywall!</Text>
             <Button 
-                title="puciobutton" 
+                title="Subscribe" 
                 onPress={() => setIsSubscribed(true)} 
             />
         </View>

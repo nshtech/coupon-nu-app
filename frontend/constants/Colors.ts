@@ -27,4 +27,12 @@ export default {
     tabIconDefault: '#ccc',
     tabIconSelected: tintColorDark,
   },
+  NU_PURPLE: '#4E2A84',
+  PURPLE_80: '#684C96',
+  PURPLE_70: '#765DA0',
+  PURPLE_60: '#836EAA',
+  PURPLE_50: '#9380B6',
+  PURPLE_40: '#A495C3',
+  PURPLE_30: '#B6ACD1',
+  PURPLE_20: '#CCC4DF',
 };
