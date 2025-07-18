@@ -5,6 +5,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // refer to Figma design system page
         'nu-purple': '#4E2A84',
         'purple-80': '#684C96',
         'purple-70': '#765DA0',
@@ -13,6 +14,8 @@ module.exports = {
         'purple-40': '#A495C3',
         'purple-30': '#B6ACD1',
         'purple-20': '#CCC4DF',
+        'purple-like-gray': '#CCC4DF',
+        'dark-gray': '#7E7E7E',
       },
       fontFamily: {
         'inter': ['Inter', 'system-ui', 'sans-serif'],

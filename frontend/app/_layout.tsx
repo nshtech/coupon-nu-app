@@ -8,6 +8,11 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { SUBSCRIBED } from '@/constants/Subscribed';
 import PaywallScreen from '@/components/PaywallScreen';
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
 
 import { useColorScheme } from '@/components/useColorScheme';
 
@@ -29,6 +34,9 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    Inter: Inter_400Regular,
+    InterMedium: Inter_500Medium,
+    InterBold: Inter_700Bold,
     ...FontAwesome.font,
   });
 

@@ -18,7 +18,7 @@ export default function TabLayout() {
         headerShown: useClientOnlyValue(false, true),
       }}>
       <Tabs.Screen
-        name="index"
+        name="my-coupons"
         options={{
           title: 'My Coupons',
           headerTitleStyle: {
@@ -47,7 +47,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="my-account"
         options={{
           title: 'My Account',
           headerTitleStyle: {
