@@ -6,7 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
-import { SUBSCRIBED } from '@/constants/Subscribed';
+// import { SUBSCRIBED } from '@/constants/Subscribed';
 import PaywallScreen from '@/components/PaywallScreen';
 import {
   Inter_400Regular,
@@ -74,7 +74,7 @@ function RootLayoutNav() {
   return (
       <ThemeProvider value={DefaultTheme}>
         <StatusBar style="dark" />
-        <Stack>
+        <Stack initialRouteName="(tabs)">
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           {/* <Stack.Screen name="modal" options={{ presentation: 'modal' }} /> */}
         </Stack>

@@ -4,12 +4,10 @@ import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Settings, MessageCircleQuestionMark, File, Lock, Trash2, LogOut } from 'lucide-react-native';
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-
-export default function TabTwoScreen() {
+export default function MyAccount() {
   return (
     <View className="flex-1">
-      <View className="py-4 px-6" style={{ backgroundColor: Colors.PURPLE_80 }}>
+      <View className="py-4 px-6 bg-purple-80"  >
         {/* eventually this will be fetched from the OAuth session */}
         <Text className="text-white text-3xl font-inter-bold">Stephen Levitt</Text>
         <Text className="text-white text-lg font-inter-bold mb-5">ceo@studentholdings.org</Text>

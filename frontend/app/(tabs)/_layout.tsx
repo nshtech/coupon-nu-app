@@ -18,7 +18,7 @@ export default function TabLayout() {
         headerShown: useClientOnlyValue(false, true),
       }}>
       <Tabs.Screen
-        name="my-coupons"
+        name="index"
         options={{
           title: 'My Coupons',
           headerTitleStyle: {
