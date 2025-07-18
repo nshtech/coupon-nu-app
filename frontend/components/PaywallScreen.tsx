@@ -7,9 +7,9 @@ type PaywallScreenProps = {
 export default function PaywallScreen({ setIsSubscribed }: PaywallScreenProps) {
     return (
         <View className="flex-1 items-center justify-center bg-white">
-            <Text className="text-2xl text-black font-inter-medium">Paywall!</Text>
+            <Text className="text-2xl text-black font-inter-medium"></Text>
             <Button 
-                title="Subscribe" 
+                title="Continue with Apple" 
                 onPress={() => setIsSubscribed(true)} 
             />
         </View>
