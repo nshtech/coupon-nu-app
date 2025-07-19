@@ -70,7 +70,7 @@ export default function PaywallScreen({ setIsSubscribed }: PaywallScreenProps) {
                     <Text className="text-dark-gray text-lg font-inter-medium text-center">Privacy Policy</Text>
                 </TouchableOpacity>
             </View>
-
+            
         </View>
     );
 }

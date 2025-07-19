@@ -6,8 +6,9 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
-// import { SUBSCRIBED } from '@/constants/Subscribed';
 import PaywallScreen from '@/components/PaywallScreen';
+import LogInScreen from '@/components/LogInScreen';
+
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -40,7 +41,9 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
 
-  const [isSubscribed, setIsSubscribed] = useState(false);
+  // temporary states handling the subscription and logged in state -> will be global contexts eventuallyf
+  const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -55,6 +58,12 @@ export default function RootLayout() {
 
   if (!loaded) {
     return null;
+  }
+
+
+  // return the login screen before rending the paywall
+  if (!isLoggedIn) {
+    return <LogInScreen setIsLoggedIn={setIsLoggedIn} />;
   }
 
   // return the paywall BEFORE rendering the app
