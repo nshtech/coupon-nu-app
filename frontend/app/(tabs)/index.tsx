@@ -37,10 +37,10 @@ export default function MyCoupons() {
       <View className="flex-1 bg-white p-4">
         {/* MAP THE CORRECT COUPON OBJECTS HERE EVENTUALLY */}
         {couponTab === "active" ? (
-          <Text className="font-inter-bold text-3xl">Active Coupon</Text>
+          <Text className="font-inter-bold text-3xl">a</Text>
 
         ) : (
-          <Text className="font-inter-bold text-3xl">EXPIRED COUPON 1</Text>
+          <Text className="font-inter-bold text-3xl">b</Text>
         )}
 
       </View>

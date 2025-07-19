@@ -6,14 +6,14 @@ import { Settings, MessageCircleQuestionMark, File, Lock, Trash2, LogOut } from 
 
 export default function MyAccount() {
   return (
-    <View className="flex-1">
+    <View className="flex-1 bg-white">
       <View className="py-4 px-6 bg-purple-80"  >
         {/* eventually this will be fetched from the OAuth session */}
         <Text className="text-white text-3xl font-inter-bold">Stephen Levitt</Text>
         <Text className="text-white text-lg font-inter-bold mb-5">ceo@studentholdings.org</Text>
         <Text className="text-white text-2xl font-inter-bold">Subscription renews on January 1, 2026</Text>
       </View>      
-      <View className="flex-1 bg-white p-4">
+      <View className="flex-1 p-4">
         
         {/* Settings */}
         <View className="space-y-4">
