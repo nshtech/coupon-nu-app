@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import PaywallScreen from '@/components/PaywallScreen';
 import LogInScreen from '@/components/LogInScreen';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 
 import {
   Inter_400Regular,
@@ -41,9 +42,7 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
 
-  // temporary states handling the subscription and logged in state -> will be global contexts eventuallyf
-  const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -60,10 +59,23 @@ export default function RootLayout() {
     return null;
   }
 
+  return (
+    // later SubscriptionProvider
+    <AuthProvider>
+      <RootLayoutContent />
+    </AuthProvider>
+  );
+}
 
-  // return the login screen before rending the paywall
-  if (!isLoggedIn) {
-    return <LogInScreen setIsLoggedIn={setIsLoggedIn} />;
+function RootLayoutContent() {
+
+  // temporary states handling the subscription and logged in state -> will be global contexts eventually
+  const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
+  const { isLoggedIn } = useAuth();
+
+   // return the login screen before rending the paywall
+   if (!isLoggedIn) {
+    return <LogInScreen />;
   }
 
   // return the paywall BEFORE rendering the app
@@ -72,10 +84,9 @@ export default function RootLayout() {
     return <PaywallScreen setIsSubscribed={setIsSubscribed} />;
   }
 
-
-
   return <RootLayoutNav />;
 }
+
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
@@ -88,6 +99,5 @@ function RootLayoutNav() {
           {/* <Stack.Screen name="modal" options={{ presentation: 'modal' }} /> */}
         </Stack>
       </ThemeProvider>
-
   );
 }

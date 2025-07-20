@@ -1,10 +1,15 @@
 import { Button, TouchableOpacity, View, Text, Pressable } from 'react-native';
+import { useAuth } from '@/contexts/AuthContext';
+
 
 type LogInScreenProps = {
     setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export default function LogInScreen({ setIsLoggedIn }: LogInScreenProps) {
+export default function LogInScreen() {
+
+    const { login } = useAuth();
+
     return (
         <View className="flex-1 bg-white ">
 
@@ -14,7 +19,7 @@ export default function LogInScreen({ setIsLoggedIn }: LogInScreenProps) {
 
             <View className="items-center justify-center gap-5 mt-60">
 
-                <TouchableOpacity className="bg-purple-80 px-16 py-2 rounded-lg" onPress={() => setIsLoggedIn(true)}>
+                <TouchableOpacity className="bg-purple-80 px-16 py-2 rounded-lg" onPress={() => login()}>
                     <Text className="text-white text-2xl">Sign in with Google</Text>
                 </TouchableOpacity>
 
