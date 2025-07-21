@@ -9,6 +9,7 @@ import 'react-native-reanimated';
 import PaywallScreen from '@/components/PaywallScreen';
 import LogInScreen from '@/components/LogInScreen';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { SubscriptionProvider, useSubscription } from '@/contexts/SubscriptionContext';
 
 import {
   Inter_400Regular,
@@ -60,17 +61,19 @@ export default function RootLayout() {
   }
 
   return (
-    // later SubscriptionProvider
-    <AuthProvider>
-      <RootLayoutContent />
-    </AuthProvider>
+    <SubscriptionProvider>
+      <AuthProvider>
+        <RootLayoutContent />
+      </AuthProvider>
+    </SubscriptionProvider>
   );
 }
 
 function RootLayoutContent() {
 
   // temporary states handling the subscription and logged in state -> will be global contexts eventually
-  const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
+  // const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
+  const { isSubscribed } = useSubscription();
   const { isLoggedIn } = useAuth();
 
    // return the login screen before rending the paywall
@@ -81,7 +84,7 @@ function RootLayoutContent() {
   // return the paywall BEFORE rendering the app
   // trigger a rerender of the app when the user is subscribed, returning rootlayoutnav
   if (!isSubscribed) {
-    return <PaywallScreen setIsSubscribed={setIsSubscribed} />;
+    return <PaywallScreen />;
   }
 
   return <RootLayoutNav />;

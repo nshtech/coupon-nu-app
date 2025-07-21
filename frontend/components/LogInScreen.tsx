@@ -29,6 +29,7 @@ export default function LogInScreen() {
                         By clicking continue, you agree to our{' '}
                         <Text 
                             className="font-inter-bold text-black" 
+                            // terms of service scrollable native webview
                             onPress={() => {}}
                         >
                             Terms of Service
@@ -38,6 +39,7 @@ export default function LogInScreen() {
 
                         <Text 
                             className="font-inter-bold text-black" 
+                            // privacy policy scrollable native webview
                             onPress={() => {}}
                         >
                             Privacy Policy

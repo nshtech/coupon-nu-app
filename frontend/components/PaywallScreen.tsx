@@ -2,12 +2,13 @@ import { Button, Text, View } from "react-native";
 import { GraduationCap } from 'lucide-react-native';
 import Colors from "@/constants/Colors";
 import { TouchableOpacity } from "react-native";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 
-type PaywallScreenProps = {
-    setIsSubscribed: React.Dispatch<React.SetStateAction<boolean>>;
-}
 
-export default function PaywallScreen({ setIsSubscribed }: PaywallScreenProps) {
+
+export default function PaywallScreen() {
+
+    const { subscribe } = useSubscription();
     return (
         <View className="flex-1 bg-white">
 
@@ -52,7 +53,7 @@ export default function PaywallScreen({ setIsSubscribed }: PaywallScreenProps) {
             <View className="flex-col items-center justify-center p-4 gap-4">
                 <Text className="text-dark-gray text-xl font-inter-medium text-center">$19.99/quarter, cancel anytime </Text>
 
-                <TouchableOpacity className="bg-purple-80 px-8 py-4 rounded-lg" onPress={() => setIsSubscribed(true)}>
+                <TouchableOpacity className="bg-purple-80 px-8 py-4 rounded-lg" onPress={() => subscribe()}>
                     <Text className="text-white text-xl font-inter-semibold text-center">
                         Continue with Apple
                     </Text>
