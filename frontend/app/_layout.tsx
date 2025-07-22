@@ -10,7 +10,7 @@ import PaywallScreen from '@/components/PaywallScreen';
 import LogInScreen from '@/components/LogInScreen';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { SubscriptionProvider, useSubscription } from '@/contexts/SubscriptionContext';
-
+import * as WebBrowser from 'expo-web-browser';
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -33,6 +33,9 @@ export const unstable_settings = {
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
