@@ -71,8 +71,6 @@ export default function RootLayout() {
 
 function RootLayoutContent() {
 
-  // temporary states handling the subscription and logged in state -> will be global contexts eventually
-  // const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
   const { isSubscribed } = useSubscription();
   const { isLoggedIn } = useAuth();
 

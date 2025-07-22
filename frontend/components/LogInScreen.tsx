@@ -1,20 +1,51 @@
+import React, { useEffect, useState } from 'react';
 import { Button, TouchableOpacity, View, Text, Pressable } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import * as AuthSession from 'expo-auth-session';
+import { supabase } from '@/utils/supabase';
 
 
-type LogInScreenProps = {
-    setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
-}
 
 export default function LogInScreen() {
 
     const { login } = useAuth();
+
+    // testtesttest
+    const [firstId, setFirstId] = useState<string>('not found');
+
+
+    useEffect(() => {
+        async function fetchFirstId() {
+            const { data, error } = await supabase
+                .from('siem')
+                .select('text')
+                .limit(1)
+                .single();
+            // console.log('Fetched data:', data);
+            if (error) {
+                console.error(error);
+                setFirstId('not found');
+            } else {
+                setFirstId(data?.text ?? 'not found');
+            }
+        }
+        fetchFirstId();
+    }, []);
+
+    // testtesttest
+
+
 
     return (
         <View className="flex-1 bg-white ">
 
             <View className="items-center py-10 mt-20 justify-center">
                 <Text className="text-black text-5xl font-inter-bold">Coupon NU</Text>
+            </View>
+
+            {/* Display the first row's ID from Supabase */}
+            <View className="items-center mt-4">
+                <Text className="text-lg text-gray-700">testesttest {firstId}</Text>
             </View>
 
             <View className="items-center justify-center gap-5 mt-60">
