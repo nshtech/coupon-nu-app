@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 interface SubscriptionContextType {
     isSubscribed: boolean;
     subscribe: () => void;
+    unsubscribe: () => void;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -18,9 +19,14 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         setIsSubscribed(true);
     };
 
+    const unsubscribe = () => {
+        setIsSubscribed(false);
+    };
+
     const contextValue: SubscriptionContextType = {
         isSubscribed,
         subscribe,
+        unsubscribe,
     };
 
     return (

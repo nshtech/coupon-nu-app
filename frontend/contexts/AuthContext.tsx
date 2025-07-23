@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { supabase } from '@/utils/supabase';
 
 interface AuthContextType {
     isLoggedIn: boolean;
@@ -24,6 +25,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const logout = () => {
         setIsLoggedIn(false);
     };
+
+    useEffect(() => {
+        // Get initial session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setIsLoggedIn(!!session);
+        });
+
+        // Listen for session changes
+        const { data: listener } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+            setIsLoggedIn(!!session);
+            console.log('[AuthProvider] Auth event:', _event, 'Session:', session);
+        });
+        return () => {
+            listener?.subscription.unsubscribe();
+        };
+    }, []);
 
     // what is accessible to the children
     const contextValue: AuthContextType = {

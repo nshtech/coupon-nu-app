@@ -4,10 +4,24 @@ import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Settings, MessageCircleQuestionMark, File, Lock, Trash2, LogOut } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/utils/supabase';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 
 export default function MyAccount() {
 
-  const { logout} = useAuth();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+        console.error('Error signing out:', error);
+    } else {
+        console.log('Signed out successfully');
+    }
+};
+  
+
+  const { logout } = useAuth();
+  const { unsubscribe } = useSubscription();
 
 
   return (
@@ -22,7 +36,7 @@ export default function MyAccount() {
         
         {/* Settings */}
         <View className="space-y-4">
-          <TouchableOpacity className="flex-row items-center p-4">
+          <TouchableOpacity className="flex-row items-center p-4" onPress={unsubscribe}>
             <Settings size={24} color={Colors.NU_PURPLE} />
             <Text className="text-black text-lg font-inter-bold ml-3">Manage Subscription</Text>
           </TouchableOpacity>
@@ -49,7 +63,7 @@ export default function MyAccount() {
             <Text className="text-black text-lg font-inter-bold ml-3">Delete Account</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity className="flex-row items-center p-4" onPress={() => logout()}>
+          <TouchableOpacity className="flex-row items-center p-4" onPress={handleLogout}>
             <LogOut size={24} color={Colors.NU_PURPLE} />
             <Text className="text-black text-lg font-inter-bold ml-3">Log Out</Text>
           </TouchableOpacity>
