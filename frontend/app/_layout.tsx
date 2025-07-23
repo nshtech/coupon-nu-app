@@ -35,8 +35,6 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 
-WebBrowser.maybeCompleteAuthSession();
-
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
@@ -64,11 +62,11 @@ export default function RootLayout() {
   }
 
   return (
-    <SubscriptionProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <SubscriptionProvider>
         <RootLayoutContent />
-      </AuthProvider>
-    </SubscriptionProvider>
+      </SubscriptionProvider>
+    </AuthProvider>
   );
 }
 

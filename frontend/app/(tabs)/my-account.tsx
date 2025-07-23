@@ -9,18 +9,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 
 export default function MyAccount() {
 
-
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-        console.error('Error signing out:', error);
-    } else {
-        console.log('Signed out successfully');
-    }
-};
-  
-
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { unsubscribe } = useSubscription();
 
 
@@ -28,8 +17,8 @@ export default function MyAccount() {
     <View className="flex-1 bg-white">
       <View className="py-4 px-6 bg-purple-80"  >
         {/* eventually this will be fetched from the OAuth session */}
-        <Text className="text-white text-3xl font-inter-bold">Stephen Levitt</Text>
-        <Text className="text-white text-lg font-inter-bold mb-5">ceo@studentholdings.org</Text>
+        <Text className="text-white text-3xl font-inter-bold">{user?.user_metadata.full_name}</Text>
+        <Text className="text-white text-lg font-inter-bold mb-5">{user?.email}</Text>
         <Text className="text-white text-2xl font-inter-bold">Subscription renews on January 1, 2026</Text>
       </View>      
       <View className="flex-1 p-4">
@@ -63,7 +52,7 @@ export default function MyAccount() {
             <Text className="text-black text-lg font-inter-bold ml-3">Delete Account</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity className="flex-row items-center p-4" onPress={handleLogout}>
+          <TouchableOpacity className="flex-row items-center p-4" onPress={logout}>
             <LogOut size={24} color={Colors.NU_PURPLE} />
             <Text className="text-black text-lg font-inter-bold ml-3">Log Out</Text>
           </TouchableOpacity>

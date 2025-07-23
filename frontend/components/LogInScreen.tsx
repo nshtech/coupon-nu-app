@@ -21,19 +21,7 @@ export default function LogInScreen() {
     const { unsubscribe } = useSubscription();
 
 
-    const redirectUri = AuthSession.makeRedirectUri({
-        // useProxy: true,
-    });
-    // console.log(redirectUri);
-
-    // const [request, response, promptAsync] = useAuthRequest(
-    //     {
-    //         clientId: 'fake',
-    //         scopes: [],
-    //         redirectUri,log
-    //     },
-    //     { authorizationEndpoint: '' }
-    // );
+    const redirectUri = AuthSession.makeRedirectUri();
 
     const handleLogin = async () => {
 
@@ -51,16 +39,17 @@ export default function LogInScreen() {
         }
 
         const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
-        console.log(result);
+        // console.log(result);
 
-        // --- Add this block to get the session from the URL fragment ---
+
+        // parsing url for session data - TAKE A LOOK AGAIN ONCE DEPLOYED
         if (result.type === 'success' && result.url) {
             const fragment = result.url.split('#')[1];
             if (fragment) {
                 const params = Object.fromEntries(new URLSearchParams(fragment));
                 const access_token = params['access_token'];
                 const refresh_token = params['refresh_token'];
-                console.log('Parsed tokens:', { access_token, refresh_token });
+                // console.log('Parsed tokens:', { access_token, refresh_token });
                 if (access_token && refresh_token) {
                     const { data: sessionData, error: setSessionError } = await supabase.auth.setSession({
                         access_token,
@@ -68,9 +57,7 @@ export default function LogInScreen() {
                     });
                     if (setSessionError) {
                         console.error('Error setting session:', setSessionError);
-                    } else {
-                        console.log('Supabase session set:', sessionData);
-                    }
+                    } 
                 } else {
                     console.warn('No access_token or refresh_token found in URL fragment.');
                 }
@@ -78,16 +65,16 @@ export default function LogInScreen() {
                 console.warn('No fragment found in result URL.');
             }
         }
-        // --- End block ---
 
-        if (result.type === 'success') {
-            console.log('Waiting for session data...');
-        } else {
-            console.warn('Login cancelled or failed:', result);
-        }
 
-        const { data: session } = await supabase.auth.getSession();
-        console.log('📦 Manual session check:', session);
+        // if (result.type === 'success') {
+        //     console.log('Waiting for session data...');
+        // } else {
+        //     console.warn('Login cancelled or failed:', result);
+        // }
+
+        // const { data: session } = await supabase.auth.getSession();
+        // console.log('📦 Manual session check:', session);
 
     };
 
@@ -106,11 +93,11 @@ export default function LogInScreen() {
                 <TouchableOpacity className="bg-purple-80 px-16 py-2 rounded-lg" onPress={handleLogin}>
                     <Text className="text-white text-2xl">Sign in with Google</Text>
                 </TouchableOpacity>
-{/* 
-                Log Out button for testing */}
-                <TouchableOpacity className="bg-red-500 px-16 py-2 rounded-lg mt-4" onPress={unsubscribe}>
+
+               
+                {/* <TouchableOpacity className="bg-red-500 px-16 py-2 rounded-lg mt-4" onPress={unsubscribe}>
                     <Text className="text-white text-2xl">Unsubscribe</Text>
-                </TouchableOpacity>
+                </TouchableOpacity>  */}
 
                 <View>
                     <Text className="px-10 text-center text-dark-gray font-inter-medium">
