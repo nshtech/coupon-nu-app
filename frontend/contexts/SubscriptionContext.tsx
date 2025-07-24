@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from './AuthContext';
 
 interface SubscriptionContextType {
     isSubscribed: boolean;
     subscriptionExpiration: Date | null;
-    restorePurchases: () => void;
+    getSubscription: () => void;
     subscribe: () => void;
     unsubscribe: () => void;
 }
@@ -22,11 +22,37 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
     const { user } = useAuth();
 
+    // get initial subscription status
+    useEffect(() => {
+        if (user) {
+            getSubscription();
+        }
+    }, [user]); 
+
+
+    // TODO: if user already has a subscription, getSubscription
     const subscribe = async () => {
-        setIsSubscribed(true);
 
         // create a subscription in the database
         if (user) {
+
+            // check if user already has a subscription
+            const { data: existingData, error: existingError } = await supabase
+             .from('subscriptions')
+             .select('*')
+             .eq('user_id', user.id)
+             .single();
+            if (existingError) {
+                console.error('[SubscriptionProvider] Error checking for existing subscription:', existingError);
+            } else if (existingData?.is_subscribed) {
+                console.log('[SubscriptionProvider] User already has a subscription');
+                setIsSubscribed(true);
+                setSubscriptionExpiration(existingData.subscription_expiration);
+                return;
+            }
+
+            // create a subscription in the database
+
             const { data, error } = await supabase.from('subscriptions').insert({
                 user_id: user.id,
                 is_subscribed: true,
@@ -37,13 +63,14 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
             } else {
                 console.log('[SubscriptionProvider] Subscription created successfully');
                 setSubscriptionExpiration(new Date('2026-01-01T00:00:00Z'));
+                setIsSubscribed(true);
             }
         } else {
             console.error('[SubscriptionProvider] No user found');
         }
     };
 
-    const restorePurchases = async () => {
+    const getSubscription = async () => {
         if (user) {
             const { data, error } = await supabase
              .from('subscriptions')
@@ -52,12 +79,17 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
              .single();
             if (error) {
                 console.error('[SubscriptionProvider] Error restoring purchases:', error);
-            } else {
+            } else if (data?.is_subscribed) {
                 console.log('[SubscriptionProvider] Purchases restored successfully');
                 setIsSubscribed(true);
+                setSubscriptionExpiration(data.subscription_expiration);
+            } else {
+                console.log('[SubscriptionProvider] No subscription found');
+                setIsSubscribed(false);
             }
         }
     }
+    
 
 
     // with my setup this is going to have to be a custom fastAPI route (supabase does not allow this from client side)
@@ -68,7 +100,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     const contextValue: SubscriptionContextType = {
         isSubscribed,
         subscriptionExpiration,
-        restorePurchases,
+        getSubscription,
         subscribe,
         unsubscribe,
     };

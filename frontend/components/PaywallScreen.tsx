@@ -8,7 +8,7 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 
 export default function PaywallScreen() {
 
-    const { subscribe, restorePurchases } = useSubscription();
+    const { subscribe, getSubscription } = useSubscription();
     return (
         <View className="flex-1 bg-white">
 
@@ -58,7 +58,7 @@ export default function PaywallScreen() {
                         Continue
                     </Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => restorePurchases()}>
+                <TouchableOpacity onPress={() => getSubscription()}>
                     <Text className="text-dark-gray text-xl font-inter-medium text-center">Restore Purchases</Text>
                 </TouchableOpacity>
             </View>
