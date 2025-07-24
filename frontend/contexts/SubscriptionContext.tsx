@@ -43,7 +43,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
              .eq('user_id', user.id)
              .single();
             if (existingError) {
-                console.error('[SubscriptionProvider] Error checking for existing subscription:', existingError);
+                console.log('[SubscriptionProvider] Subscription does not seem to exist:', existingError);
             } else if (existingData?.is_subscribed) {
                 console.log('[SubscriptionProvider] User already has a subscription');
                 setIsSubscribed(true);
@@ -78,7 +78,8 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
              .eq('user_id', user.id)
              .single();
             if (error) {
-                console.error('[SubscriptionProvider] Error restoring purchases:', error);
+                // question is should i keep this an error and keep users instantly in the subscription db?
+                console.log('[SubscriptionProvider] Error restoring purchases:', error); 
             } else if (data?.is_subscribed) {
                 console.log('[SubscriptionProvider] Purchases restored successfully');
                 setIsSubscribed(true);
@@ -92,9 +93,23 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     
 
 
-    // with my setup this is going to have to be a custom fastAPI route (supabase does not allow this from client side)
-    const unsubscribe = () => {
+    
+    const unsubscribe = async () => {
         setIsSubscribed(false);
+        setSubscriptionExpiration(null);
+
+        // delete the subscription from the database
+        if (user) {
+            const { error } = await supabase
+             .from('subscriptions')
+             .delete()
+             .eq('user_id', user.id);
+            if (error) {
+                console.error('[SubscriptionProvider] Error deleting subscription:', error);
+            } else {
+                console.log('[SubscriptionProvider] Subscription deleted successfully');
+            }
+        }
     };
 
     const contextValue: SubscriptionContextType = {
