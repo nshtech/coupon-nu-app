@@ -10,7 +10,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 export default function MyAccount() {
 
   const { user, logout } = useAuth();
-  const { unsubscribe } = useSubscription();
+  const { unsubscribe, subscriptionExpiration } = useSubscription();
 
 
   return (
@@ -19,7 +19,7 @@ export default function MyAccount() {
         {/* eventually this will be fetched from the OAuth session */}
         <Text className="text-white text-3xl font-inter-bold">{user?.user_metadata.full_name}</Text>
         <Text className="text-white text-lg font-inter-bold mb-5">{user?.email}</Text>
-        <Text className="text-white text-2xl font-inter-bold">Subscription renews on January 1, 2026</Text>
+        <Text className="text-white text-2xl font-inter-bold">Subscription renews on {subscriptionExpiration?.toLocaleDateString()}</Text>
       </View>      
       <View className="flex-1 p-4">
         

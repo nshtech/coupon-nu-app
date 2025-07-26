@@ -30,7 +30,6 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     }, [user]); 
 
 
-    // TODO: if user already has a subscription, getSubscription
     const subscribe = async () => {
 
         // create a subscription in the database
@@ -43,11 +42,12 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
              .eq('user_id', user.id)
              .single();
             if (existingError) {
-                console.log('[SubscriptionProvider] Subscription does not seem to exist:', existingError);
+                // question is should i keep this an error and keep users instantly in the subscription db?
+                console.log('[SubscriptionProvider] Subscription does not seem to exist:', existingError); 
             } else if (existingData?.is_subscribed) {
                 console.log('[SubscriptionProvider] User already has a subscription');
                 setIsSubscribed(true);
-                setSubscriptionExpiration(existingData.subscription_expiration);
+                setSubscriptionExpiration(existingData.subscription_expiration ? new Date(existingData.subscription_expiration) : null);
                 return;
             }
 
@@ -56,13 +56,13 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
             const { data, error } = await supabase.from('subscriptions').insert({
                 user_id: user.id,
                 is_subscribed: true,
-                subscription_expiration: new Date('2026-01-01T00:00:00Z'), // January 1, 2026
+                subscription_expiration: new Date('2026-01-01T00:00:00-06:00'), // January 1, 2026 Central Time
             })
             if (error) {
                 console.error('[SubscriptionProvider] Error creating subscription:', error);
             } else {
                 console.log('[SubscriptionProvider] Subscription created successfully');
-                setSubscriptionExpiration(new Date('2026-01-01T00:00:00Z'));
+                setSubscriptionExpiration(new Date('2026-01-01T00:00:00-06:00'));
                 setIsSubscribed(true);
             }
         } else {
@@ -83,16 +83,13 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
             } else if (data?.is_subscribed) {
                 console.log('[SubscriptionProvider] Purchases restored successfully');
                 setIsSubscribed(true);
-                setSubscriptionExpiration(data.subscription_expiration);
+                setSubscriptionExpiration(data.subscription_expiration ? new Date(data.subscription_expiration) : null);
             } else {
                 console.log('[SubscriptionProvider] No subscription found');
                 setIsSubscribed(false);
             }
         }
     }
-    
-
-
     
     const unsubscribe = async () => {
         setIsSubscribed(false);
