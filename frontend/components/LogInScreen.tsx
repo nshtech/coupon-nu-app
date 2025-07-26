@@ -94,11 +94,6 @@ export default function LogInScreen() {
                     <Text className="text-white text-2xl">Sign in with Google</Text>
                 </TouchableOpacity>
 
-               
-                {/* <TouchableOpacity className="bg-red-500 px-16 py-2 rounded-lg mt-4" onPress={unsubscribe}>
-                    <Text className="text-white text-2xl">Unsubscribe</Text>
-                </TouchableOpacity>  */}
-
                 <View>
                     <Text className="px-10 text-center text-dark-gray font-inter-medium">
 
