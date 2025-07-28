@@ -45,13 +45,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
             if (session) {
                 setSession(session);
                 setUser(session.user);
-                console.log('[AuthProvider] Session set!', session);
+                // console.log('[AuthProvider] Session set!', session);
             }
         });
 
         // Listen for session changes
         const { data: listener } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
-            console.log('[AuthProvider] Auth event:', _event, 'Session:', session);
+            // console.log('[AuthProvider] Auth event:', _event, 'Session:', session);
             setIsLoggedIn(!!session);
             // if there is a session, set the session
             if (session) {
