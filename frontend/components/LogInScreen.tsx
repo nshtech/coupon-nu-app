@@ -85,7 +85,7 @@ export default function LogInScreen() {
         <View className="flex-1 bg-white ">
 
             <View className="items-center py-10 mt-20 justify-center">
-                <Text className="text-black text-5xl font-inter-bold">Coupon NU</Text>
+                <Text className="text-purple-80 text-5xl font-inter-bold">Purple Perks</Text>
             </View>
 
             <View className="items-center justify-center gap-5 mt-60">

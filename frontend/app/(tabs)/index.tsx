@@ -1,5 +1,6 @@
 import { Text, View, Pressable, ScrollView } from 'react-native';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useFocusEffect } from '@react-navigation/native';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import CouponThumbnail from '@/components/CouponThumbnail';
@@ -11,7 +12,6 @@ export default function MyCoupons() {
   const { user } = useAuth();
 
   const [couponTab, setCouponTab] = useState<"active" | "expired">("active");
-
 
   const [usedCouponIds, setUsedCouponIds] = useState<any[]>([]);
   const [usedCoupons, setUsedCoupons] = useState<any[]>([]);
@@ -26,6 +26,45 @@ export default function MyCoupons() {
   useEffect(() => {
     fetchActiveCoupons();
   }, [usedCouponIds]);
+
+  // subscription for coupon_usages changes
+  useEffect(() => {
+    if (!user) return;
+
+    const subscription = supabase
+      .channel('coupon_usages_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'coupon_usages',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          // refetch used and active coupons
+          fetchUsedCoupons();
+          fetchActiveCoupons();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [user?.id]);
+
+
+
+  // refetching on app focus
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        fetchUsedCoupons();
+        fetchActiveCoupons();
+      }
+    }, [user?.id])
+  );
 
 
 
@@ -119,10 +158,10 @@ export default function MyCoupons() {
           <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
             <View className="gap-10 p-4">
               {activeCoupons.length === 0 ? (
-                <Text className="font-inter-bold text-xl text-black text-center">No active coupons found</Text>
+                <Text className="font-inter-bold text-xl text-dark-gray text-center">No active coupons found</Text>
               ) : (
                 activeCoupons.map((coupon: any, index: number) => (
-                  <CouponThumbnail key={coupon.id || index} coupon={coupon} />
+                  <CouponThumbnail key={coupon.id || index} coupon={coupon} couponTab={couponTab} />
                 ))
               )}
             </View>
@@ -131,10 +170,10 @@ export default function MyCoupons() {
           <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
             <View className="gap-10 p-4">
               {usedCoupons.length === 0 ? (
-                <Text className="font-inter-bold text-xl text-black text-center">No expired coupons found</Text>
+                <Text className="font-inter-bold text-xl text-dark-gray text-center">No expired coupons found</Text>
               ) : (
                 usedCoupons.map((coupon, index) => (
-                  <CouponThumbnail key={coupon.id || index} coupon={coupon} />
+                  <CouponThumbnail key={coupon.id || index} coupon={coupon} couponTab={couponTab} />
                 ))
               )}
             </View>
