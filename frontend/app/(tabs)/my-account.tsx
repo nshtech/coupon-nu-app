@@ -1,4 +1,4 @@
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import { StyleSheet, TouchableOpacity, Linking, Alert } from 'react-native';
 import Colors from '@/constants/Colors';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +11,38 @@ export default function MyAccount() {
 
   const { user, logout } = useAuth();
   const { unsubscribe, subscriptionExpiration } = useSubscription();
+
+  const handleSupport = () => {
+    const email = 'tech@studentholdings.org'; // Replace with your actual support email
+    const subject = 'Support Request - CouponNU';
+
+    const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
+    
+    Linking.canOpenURL(mailtoUrl).then(supported => {
+      if (supported) {
+        Linking.openURL(mailtoUrl);
+      } else {
+        console.log('Email app not available');
+        // Fallback: copy email to clipboard or show alert
+        alert('Please email us at tech@studentholdings.org with your issue!');
+      }
+    });
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert('Delete Account', 'Are you sure you want to delete your account? This action cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', onPress: () => {
+        console.log('delete account');
+        // delete account fastAPI call
+        // redirect to log in screen
+        // set isLoggedIn to false
+        // set user to null
+        // set subscription to null
+        // set subscriptionExpiration to null
+      } }
+    ]);
+  }
 
 
   return (
@@ -30,9 +62,8 @@ export default function MyAccount() {
             <Text className="text-black text-lg font-inter-bold ml-3">Manage Subscription</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity className="flex-row items-center p-4">
+          <TouchableOpacity className="flex-row items-center p-4" onPress={handleSupport}>
             <MessageCircleQuestionMark size={24} color={Colors.NU_PURPLE} />
-            {/* linke to email our tech email */}
             <Text className="text-black text-lg font-inter-bold ml-3">Support</Text>
           </TouchableOpacity>
           
@@ -46,7 +77,7 @@ export default function MyAccount() {
             <Text className="text-black text-lg font-inter-bold ml-3">Privacy Policy</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity className="flex-row items-center p-4">
+          <TouchableOpacity className="flex-row items-center p-4" onPress={handleDeleteAccount}>
             <Trash2 size={24} color={Colors.NU_PURPLE} />
             {/* modal to confirm deletion and later redirect to log in screen (setting isLoggedIn context to false) */}
             <Text className="text-black text-lg font-inter-bold ml-3">Delete Account</Text>

@@ -7,7 +7,7 @@ export default function CouponThumbnail({ coupon, couponTab }: { coupon: any; co
     const handlePress = () => {
         if (couponTab === "expired") return;
         
-        // Encode the coupon data to pass as URL parameter
+        // Encode the coupon data, map data, and usage setter to pass as URL parameters
         const couponData = encodeURIComponent(JSON.stringify(coupon));
         router.push(`/coupon-detail?coupon=${couponData}`);
     };

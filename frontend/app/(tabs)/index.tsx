@@ -13,101 +13,53 @@ export default function MyCoupons() {
 
   const [couponTab, setCouponTab] = useState<"active" | "expired">("active");
 
-  const [usedCouponIds, setUsedCouponIds] = useState<any[]>([]);
-  const [usedCoupons, setUsedCoupons] = useState<any[]>([]);
+
 
   const [activeCoupons, setActiveCoupons] = useState<any[]>([]);
+  const [expiredCoupons, setExpiredCoupons] = useState<any[]>([]);
+
+  const [userCouponToUsages, setUserCouponToUsages] = useState<Map<number, number>>(new Map());
+  const [allCoupons, setAllCoupons] = useState<any[]>([]);
+
+  // helper to build a map of KV pairs of coupon_id to usage count
+  const buildUserCouponToUsages = (usedCouponData: any[]): Map<number, number> => {
+    const usageCounts = new Map<number, number>();
+
+    if (!usedCouponData) return usageCounts;
+    
+    usedCouponData.forEach(usage => {
+      const couponId = usage.coupon_id;
+      const currCount = usageCounts.get(couponId) || 0;
+      usageCounts.set(couponId, currCount + 1);
+    });
+    return usageCounts;
+  }
 
 
-  useEffect(() =>{
-    fetchUsedCoupons();
-  }, [user, usedCouponIds]);
-
-  useEffect(() => {
-    fetchActiveCoupons();
-  }, [usedCouponIds]);
-
-  // subscription for coupon_usages changes
-  useEffect(() => {
-    if (!user) return;
-
-    const subscription = supabase
-      .channel('coupon_usages_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'coupon_usages',
-          filter: `user_id=eq.${user.id}`
-        },
-        () => {
-          // refetch used and active coupons
-          fetchUsedCoupons();
-          fetchActiveCoupons();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [user?.id]);
-
-
-
-  // refetching on app focus
-  useFocusEffect(
-    useCallback(() => {
-      if (user) {
-        fetchUsedCoupons();
-        fetchActiveCoupons();
-      }
-    }, [user?.id])
-  );
-
-
-
-  
-  const fetchUsedCoupons = async () => {
+  // fetch coupon usages for the user, and feed to the map building helper
+  const fetchCouponUsages = async () => {
     if (!user) return;
 
     try {
-      const { data: usedCouponIdData, error: usedCouponError } = await supabase
+      const { data: couponUsagesData, error: couponUsagesError } = await supabase
         .from('coupon_usages')
         .select('coupon_id')
-        .eq('user_id', user.id)
+        .eq('user_id', user.id);
 
-      if (usedCouponError) {
-        console.error('Error fetching used coupon IDs:', usedCouponError);
+      if (couponUsagesError) {
+        console.error('Error fetching coupon usages:', couponUsagesError);
       } else {
-
-        // Now fetch the complete coupon rows using those IDs
-        if (usedCouponIdData && usedCouponIdData.length > 0) {
-          const couponIds = usedCouponIdData.map(coupon => coupon.coupon_id);
-          setUsedCouponIds(couponIds || []);
-          
-          const { data: usedCoupons, error: usedCouponsError } = await supabase
-            .from('coupons')
-            .select('*')
-            .in('coupon_id', couponIds);
-
-          if (usedCouponsError) {
-            console.error('Error fetching used coupons:', usedCouponsError);
-          } else {
-            // console.log('usedCoupons', usedCoupons);
-            setUsedCoupons(usedCoupons || []);
-          }
-        }
+        const usageCounts = buildUserCouponToUsages(couponUsagesData);
+        setUserCouponToUsages(usageCounts);
       }
-        
     } catch (error) {
-      console.error('Error fetching used coupons:', error);
+      console.error('Error fetching coupon usages:', error);
     }
   }
 
 
-  const fetchActiveCoupons = async () => {
+  // fetch all coupons once on app load!
+  const fetchAllCoupons = async () => {
     if (!user) return;
 
     try {
@@ -118,15 +70,48 @@ export default function MyCoupons() {
       if (couponsError) {
         console.error('Error fetching coupons:', couponsError);
       } else {
-        const activeCoupons = allCoupons.filter(coupon => !usedCouponIds.includes(coupon.coupon_id));
-        // console.log('activeCoupons', activeCoupons);
-        setActiveCoupons(activeCoupons || []);
+        setAllCoupons(allCoupons);
       }
-
     } catch (error) {
-      console.error('Error fetching coupon data:', error);
+      console.error('Error fetching coupons:', error);
     }
   }
+
+
+  // helper to filter out coupons that are considered expired
+  const filterCouponsByUsage = (allCoupons: any[], usageCounts: Map<number, number>) => {
+    const activeCoupons: any[] = [];
+    const expiredCoupons: any[] = [];
+
+    allCoupons.forEach(coupon => {
+      const usageCount = usageCounts.get(coupon.coupon_id) || 0;
+      const usageLimit = coupon.usage_limit;
+
+      if (usageLimit > usageCount || usageLimit === 0) {
+        activeCoupons.push(coupon);
+      } else {
+        expiredCoupons.push(coupon);
+      }
+    })
+
+    setActiveCoupons(activeCoupons);
+    setExpiredCoupons(expiredCoupons);
+  }
+
+  useEffect(() => {
+    if (user) {
+      fetchAllCoupons();
+      fetchCouponUsages();
+    }
+  }, [user]);
+
+  // filter coupons by usage counts, and run this when the user coupon to usages map is updated through the usage in coupon-detail.tsx
+  useEffect(() => {
+    if (allCoupons.length > 0) {
+      filterCouponsByUsage(allCoupons, userCouponToUsages);
+    }
+  }, [userCouponToUsages]);
+
 
   
   return (
@@ -144,7 +129,7 @@ export default function MyCoupons() {
 
         {/* expired tab */}
         <Pressable className="flex-1 items-center flex-col justify-end" onPress={() => setCouponTab("expired")}>
-          <Text className="text-white text-3xl font-inter-bold mb-2 pt-5 pb-1">Expired ({usedCoupons.length})</Text>
+          <Text className="text-white text-3xl font-inter-bold mb-2 pt-5 pb-1">Expired ({expiredCoupons.length})</Text>
           <View className={`h-1 w-full absolute-bottom-0 ${couponTab === "expired" ? "bg-white" : "bg-transparent"}`} />
         </Pressable>
       </View>
@@ -169,10 +154,10 @@ export default function MyCoupons() {
         ) : (
           <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
             <View className="gap-10 p-4">
-              {usedCoupons.length === 0 ? (
+              {expiredCoupons.length === 0 ? (
                 <Text className="font-inter-bold text-xl text-dark-gray text-center">No expired coupons found</Text>
               ) : (
-                usedCoupons.map((coupon, index) => (
+                expiredCoupons.map((coupon: any, index: number) => (
                   <CouponThumbnail key={coupon.id || index} coupon={coupon} couponTab={couponTab} />
                 ))
               )}

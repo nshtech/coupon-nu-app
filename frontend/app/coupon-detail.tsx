@@ -1,10 +1,9 @@
-import { View, Text, Pressable, TouchableOpacity, Image } from 'react-native';
+import { View, Text, Pressable, TouchableOpacity, Image, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-
 
 
 
@@ -81,18 +80,27 @@ export default function CouponDetail() {
   
   const handleUseCoupon = async () => {
 
+    Alert.alert('Use Coupon', 'Are you sure you want to use this coupon? This action cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Use', onPress: () => {
+        useCoupon();
+      } }
+    ]);
+  };
+
+  const useCoupon = async () => {
     if (!user) {
       console.error('User not found');
       return;
     }
 
     const { error } = await supabase
-      .from('coupon_usages')
-      .insert({
-        user_id: user.id,
-        coupon_id: coupon.coupon_id,
-        used_at: new Date().toISOString(),
-      });
+    .from('coupon_usages')
+    .insert({
+      user_id: user?.id,
+      coupon_id: coupon.coupon_id,
+      used_at: new Date().toISOString(),
+    });
 
     if (error) {
       console.error('Error using coupon:', error);
@@ -100,10 +108,7 @@ export default function CouponDetail() {
       setIsActivated(true);
       setNewExpirationDate(new Date(Date.now() + 2 * 60 * 1000).toISOString());
     }
-
-  };
-
-  
+  }
 
   return (
     <View className="flex-1 bg-white">

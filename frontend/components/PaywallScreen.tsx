@@ -51,7 +51,7 @@ export default function PaywallScreen() {
 
 
             <View className="flex-col items-center justify-center p-4 gap-4">
-                <Text className="text-dark-gray text-xl font-inter-medium text-center">Free! (for now)</Text>
+                <Text className="text-dark-gray text-xl font-inter-medium text-center">$9.99/quarter</Text>
 
                 <TouchableOpacity className="bg-purple-80 px-8 py-4 rounded-lg" onPress={() => subscribe()}>
                     <Text className="text-white text-xl font-inter-semibold text-center">
