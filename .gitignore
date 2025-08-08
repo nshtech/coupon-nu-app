@@ -48,3 +48,18 @@ yarn-error.*
 
 expo-env.d.ts
 # @end expo-cli
+
+
+
+
+## backend
+
+.venv/
+.env
+
+__pycache__/
+
+
+
+
+
