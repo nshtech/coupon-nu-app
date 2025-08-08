@@ -4,7 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import CouponThumbnail from '@/components/CouponThumbnail';
-
+import { useUsage } from '@/contexts/UsageContext';
 
 export default function MyCoupons() {
 
@@ -18,7 +18,7 @@ export default function MyCoupons() {
   const [activeCoupons, setActiveCoupons] = useState<any[]>([]);
   const [expiredCoupons, setExpiredCoupons] = useState<any[]>([]);
 
-  const [userCouponToUsages, setUserCouponToUsages] = useState<Map<number, number>>(new Map());
+  const { userCouponToUsages, setUserCouponToUsages } = useUsage();
   const [allCoupons, setAllCoupons] = useState<any[]>([]);
 
   // helper to build a map of KV pairs of coupon_id to usage count
@@ -105,12 +105,12 @@ export default function MyCoupons() {
     }
   }, [user]);
 
-  // filter coupons by usage counts, and run this when the user coupon to usages map is updated through the usage in coupon-detail.tsx
+  // filter coupons whenever either coupons or usage counts change
   useEffect(() => {
     if (allCoupons.length > 0) {
       filterCouponsByUsage(allCoupons, userCouponToUsages);
     }
-  }, [userCouponToUsages]);
+  }, [allCoupons, userCouponToUsages]);
 
 
   

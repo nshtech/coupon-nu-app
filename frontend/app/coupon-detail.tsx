@@ -3,7 +3,8 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext'; 
+import { useUsage } from '@/contexts/UsageContext';
 
 
 
@@ -12,10 +13,10 @@ export default function CouponDetail() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { user } = useAuth();
-  
+  const { userCouponToUsages, setUserCouponToUsages } = useUsage();
   // Parse the coupon data from the URL params
   const coupon = params.coupon ? JSON.parse(decodeURIComponent(params.coupon as string)) : null;
-
+  
   if (!coupon) {
     return (
       <View className="flex-1 bg-white justify-center items-center">
@@ -107,6 +108,11 @@ export default function CouponDetail() {
     } else {
       setIsActivated(true);
       setNewExpirationDate(new Date(Date.now() + 2 * 60 * 1000).toISOString());
+
+      const newUserCouponToUsages = new Map(userCouponToUsages);
+      newUserCouponToUsages.set(coupon.coupon_id, (newUserCouponToUsages.get(coupon.coupon_id) || 0) + 1);
+      setUserCouponToUsages(newUserCouponToUsages);
+
     }
   }
 

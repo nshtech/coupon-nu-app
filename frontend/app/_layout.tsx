@@ -20,6 +20,7 @@ import {
 import { useColorScheme } from '@/components/useColorScheme';
 
 import "./../global.css"
+import { UsageProvider } from '@/contexts/UsageContext';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -64,7 +65,9 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <SubscriptionProvider>
-        <RootLayoutContent />
+        <UsageProvider>
+          <RootLayoutContent />
+        </UsageProvider>
       </SubscriptionProvider>
     </AuthProvider>
   );
