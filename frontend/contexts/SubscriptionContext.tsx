@@ -5,7 +5,8 @@ import { useAuth } from './AuthContext';
 interface SubscriptionContextType {
     isSubscribed: boolean;
     subscriptionExpiration: Date | null;
-    getSubscription: () => void;
+    isSubscriptionLoading: boolean;
+    getSubscription: () => Promise<void>;
     subscribe: () => void;
     unsubscribe: () => void;
 }
@@ -19,13 +20,20 @@ interface SubscriptionProviderProps {
 export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
     const [subscriptionExpiration, setSubscriptionExpiration] = useState<Date | null>(null);
+    const [isSubscriptionLoading, setIsSubscriptionLoading] = useState<boolean>(true);
 
     const { user } = useAuth();
 
     // get initial subscription status
     useEffect(() => {
         if (user) {
-            getSubscription();
+            setIsSubscriptionLoading(true);
+            getSubscription().finally(() => setIsSubscriptionLoading(false));
+        } else {
+            // no user → nothing to load
+            setIsSubscribed(false);
+            setSubscriptionExpiration(null);
+            setIsSubscriptionLoading(false);
         }
     }, [user]); 
 
@@ -70,7 +78,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         }
     };
 
-    const getSubscription = async () => {
+    const getSubscription = async (): Promise<void> => {
         if (user) {
             const { data, error } = await supabase
              .from('subscriptions')
@@ -112,6 +120,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     const contextValue: SubscriptionContextType = {
         isSubscribed,
         subscriptionExpiration,
+        isSubscriptionLoading,
         getSubscription,
         subscribe,
         unsubscribe,

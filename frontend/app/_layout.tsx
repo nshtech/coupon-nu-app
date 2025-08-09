@@ -1,4 +1,5 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { View, Text } from 'react-native';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -75,7 +76,7 @@ export default function RootLayout() {
 
 function RootLayoutContent() {
 
-  const { isSubscribed } = useSubscription();
+  const { isSubscribed, isSubscriptionLoading } = useSubscription();
   const { isLoggedIn } = useAuth();
 
    // return the login screen before rending the paywall
@@ -83,8 +84,16 @@ function RootLayoutContent() {
     return <LogInScreen />;
   }
 
-  // return the paywall BEFORE rendering the app
-  // trigger a rerender of the app when the user is subscribed, returning rootlayoutnav
+  // wait for subscription status to load
+  if (isSubscriptionLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <Text className="text-dark-gray text-xl font-inter-bold">Loading...</Text>
+      </View>
+    );
+  }
+
+  // after subscription loads, show the paywall if the user is not subscribed
   if (!isSubscribed) {
     return <PaywallScreen />;
   }

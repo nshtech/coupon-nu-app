@@ -1,10 +1,11 @@
-import { Text, View, Pressable, ScrollView } from 'react-native';
+import { Text, View, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import { useState, useEffect, useCallback } from "react";
 import { useFocusEffect } from '@react-navigation/native';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import CouponThumbnail from '@/components/CouponThumbnail';
 import { useUsage } from '@/contexts/UsageContext';
+import { DARK_GRAY } from '@/constants/Colors';
 
 export default function MyCoupons() {
 
@@ -20,6 +21,7 @@ export default function MyCoupons() {
 
   const { userCouponToUsages, setUserCouponToUsages } = useUsage();
   const [allCoupons, setAllCoupons] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // helper to build a map of KV pairs of coupon_id to usage count
   const buildUserCouponToUsages = (usedCouponData: any[]): Map<number, number> => {
@@ -100,8 +102,12 @@ export default function MyCoupons() {
 
   useEffect(() => {
     if (user) {
-      fetchAllCoupons();
-      fetchCouponUsages();
+      setIsLoading(true);
+      Promise.all([fetchAllCoupons(), fetchCouponUsages()]).finally(() => {
+        setIsLoading(false);
+      });
+    } else {
+      setIsLoading(false);
     }
   }, [user]);
 
@@ -138,31 +144,39 @@ export default function MyCoupons() {
       {/* rest of workable space */}
 
       <View className="flex-1 bg-white p-4">
-
-        {couponTab === "active" ? (
-          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-            <View className="gap-10 p-4">
-              {activeCoupons.length === 0 ? (
-                <Text className="font-inter-bold text-xl text-dark-gray text-center">No active coupons found</Text>
-              ) : (
-                activeCoupons.map((coupon: any, index: number) => (
-                  <CouponThumbnail key={coupon.id || index} coupon={coupon} couponTab={couponTab} />
-                ))
-              )}
-            </View>
-          </ScrollView>
+        {isLoading ? (
+          <View className="flex-1 justify-center items-center">
+            <ActivityIndicator size="large" color={DARK_GRAY} />
+            <Text className="mt-2 text-dark-gray font-inter-bold text-xl">Loading...</Text>
+          </View>
         ) : (
-          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-            <View className="gap-10 p-4">
-              {expiredCoupons.length === 0 ? (
-                <Text className="font-inter-bold text-xl text-dark-gray text-center">No expired coupons found</Text>
-              ) : (
-                expiredCoupons.map((coupon: any, index: number) => (
-                  <CouponThumbnail key={coupon.id || index} coupon={coupon} couponTab={couponTab} />
-                ))
-              )}
-            </View>
-          </ScrollView>
+          <>
+            {couponTab === "active" ? (
+              <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+                <View className="gap-10 p-4">
+                  {activeCoupons.length === 0 ? (
+                    <Text className="font-inter-bold text-xl text-dark-gray text-center">No active coupons found</Text>
+                  ) : (
+                    activeCoupons.map((coupon: any, index: number) => (
+                      <CouponThumbnail key={coupon.id || index} coupon={coupon} couponTab={couponTab} />
+                    ))
+                  )}
+                </View>
+              </ScrollView>
+            ) : (
+              <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+                <View className="gap-10 p-4">
+                  {expiredCoupons.length === 0 ? (
+                    <Text className="font-inter-bold text-xl text-dark-gray text-center">No expired coupons found</Text>
+                  ) : (
+                    expiredCoupons.map((coupon: any, index: number) => (
+                      <CouponThumbnail key={coupon.id || index} coupon={coupon} couponTab={couponTab} />
+                    ))
+                  )}
+                </View>
+              </ScrollView>
+            )}
+          </>
         )}
       </View>
 
