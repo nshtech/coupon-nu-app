@@ -30,7 +30,6 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
             setIsSubscriptionLoading(true);
             getSubscription().finally(() => setIsSubscriptionLoading(false));
         } else {
-            // no user → nothing to load
             setIsSubscribed(false);
             setSubscriptionExpiration(null);
             setIsSubscriptionLoading(false);

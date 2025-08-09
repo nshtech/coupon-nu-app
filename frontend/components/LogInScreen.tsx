@@ -39,7 +39,7 @@ export default function LogInScreen() {
         }
 
         const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
-        // console.log(result);
+        
 
 
         // parsing url for session data - TAKE A LOOK AGAIN ONCE DEPLOYED
