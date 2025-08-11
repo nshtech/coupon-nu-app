@@ -11,6 +11,7 @@ export const PURPLE_30 = '#B6ACD1';
 export const PURPLE_20 = '#CCC4DF';
 
 export const DARK_GRAY = '#7E7E7E';
+export const LIGHT_GRAY = '#D9D9D9';
 
 
 
