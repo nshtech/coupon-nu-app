@@ -1,16 +1,26 @@
 import { Button, Text, View } from "react-native";
-import { GraduationCap } from 'lucide-react-native';
-import Colors from "@/constants/Colors";
+import { GraduationCap, X } from 'lucide-react-native';
+import Colors, { DARK_GRAY } from "@/constants/Colors";
 import { TouchableOpacity } from "react-native";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 
 
 export default function PaywallScreen() {
 
     const { subscribe, getSubscription } = useSubscription();
+    const { logout } = useAuth();
+
     return (
         <View className="flex-1 bg-white">
+            {/* X button in top-left corner */}
+            <TouchableOpacity 
+                className="absolute top-16 left-6 z-10" 
+                onPress={logout}
+            >
+                <X size={24} color={DARK_GRAY} />
+            </TouchableOpacity>
 
             {/* top section */}
             <View className="flex-col items-center justify-center gap-4 mt-10 py-10">

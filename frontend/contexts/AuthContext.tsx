@@ -58,6 +58,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 setSession(session);
                 setUser(session.user);
                 console.log('[AuthProvider] Session set!', session);
+                console.log("[AuthProvider] JWT Token:", session.access_token);
             }
 
         });
