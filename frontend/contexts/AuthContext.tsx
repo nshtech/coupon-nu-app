@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-import { Session, User, UserMetadata } from '@supabase/supabase-js';
+import { Session, User } from '@supabase/supabase-js';
+import { deleteAccountAPI } from '../utils/api';
 
 interface AuthContextType {
     isLoggedIn: boolean;
@@ -8,6 +9,7 @@ interface AuthContextType {
     user: User | null;
     login: () => void;
     logout: () => void;
+    deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,7 +24,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
     const [session, setSession] = useState<Session | null>(null);
     const [user, setUser] = useState<User | null>(null);
-
     const login = () => {
         setIsLoggedIn(true);
     };
@@ -36,6 +37,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       };
 
+    const deleteAccount = async () => {
+        if (!session?.access_token) {
+            throw new Error('No active session');
+        }
+
+        try {
+            const accessToken = session.access_token;
+        
+            await deleteAccountAPI(accessToken);
+            console.log('Account deleted successfully');
+            
+            await supabase.auth.signOut(); // clears local session to prevent being stuck at paywall
+            console.log('Signed out from Supabase');
+            
+            // to be safe
+            setIsLoggedIn(false);
+            setSession(null);
+            setUser(null);
+            
+        } catch (error) {
+            console.error('Error deleting account:', error);
+            throw error; // Re-throw so the UI can handle it
+        }
+    };
+
 
 
     useEffect(() => {
@@ -45,13 +71,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
             if (session) {
                 setSession(session);
                 setUser(session.user);
-                // console.log('[AuthProvider] Session set!', session);
             }
         });
 
-        // Listen for session changes
+        // listen for session changes
         const { data: listener } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
-            // console.log('[AuthProvider] Auth event:', _event, 'Session:', session);
             setIsLoggedIn(!!session);
             // if there is a session, set the session
             if (session) {
@@ -74,6 +98,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         user,
         login,
         logout,
+        deleteAccount,
     };
 
     return (

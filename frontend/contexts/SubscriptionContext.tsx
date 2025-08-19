@@ -9,6 +9,8 @@ interface SubscriptionContextType {
     getSubscription: () => Promise<void>;
     subscribe: () => void;
     unsubscribe: () => void;
+    setIsSubscribed: (isSubscribed: boolean) => void;
+    setSubscriptionExpiration: (expiration: Date | null) => void;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -123,6 +125,8 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         getSubscription,
         subscribe,
         unsubscribe,
+        setIsSubscribed,
+        setSubscriptionExpiration,
     };
 
     return (

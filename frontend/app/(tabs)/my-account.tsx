@@ -1,20 +1,18 @@
-import { StyleSheet, TouchableOpacity, Linking, Alert } from 'react-native';
+import { TouchableOpacity, Linking, Alert } from 'react-native';
 import Colors from '@/constants/Colors';
 import { View, Text } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { Settings, MessageCircleQuestionMark, File, Lock, Trash2, LogOut } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/utils/supabase';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 
 export default function MyAccount() {
 
-  const { user, logout } = useAuth();
+  const { user, logout, deleteAccount } = useAuth();
   const { unsubscribe, subscriptionExpiration } = useSubscription();
 
   const handleSupport = () => {
-    const email = 'tech@studentholdings.org'; // Replace with your actual support email
-    const subject = 'Support Request - CouponNU';
+    const email = 'purpleperks@studentholdings.org';
+    const subject = 'Support Request - PurplePerks';
 
     const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
     
@@ -32,15 +30,20 @@ export default function MyAccount() {
   const handleDeleteAccount = () => {
     Alert.alert('Delete Account', 'Are you sure you want to delete your account? This action cannot be undone.', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', onPress: () => {
-        console.log('delete account');
-        // delete account fastAPI call
-        // redirect to log in screen
-        // set isLoggedIn to false
-        // set user to null
-        // set subscription to null
-        // set subscriptionExpiration to null
-      } }
+      { 
+        text: 'Delete', 
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteAccount();
+            console.log('Account deleted successfully');
+            unsubscribe();
+          } catch (error) {
+            console.error('Error deleting account:', error);
+            Alert.alert('Error', 'Failed to delete account. Please try again.');
+          }
+        }
+      }
     ]);
   }
 

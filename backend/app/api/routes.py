@@ -4,7 +4,6 @@ from app.config import supabase
 
 router = APIRouter(prefix="/api", tags=["api"])
 
-# Security scheme for JWT tokens
 security = HTTPBearer()
 
 @router.get("/")
@@ -12,21 +11,11 @@ def read_root():
     return {"message": "pucio!"}
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Verify JWT token and return user information"""
     try:
-        print(f"🔍 Received token: {credentials.credentials[:20]}...")
-        # Verify the JWT token with Supabase
+        # verify jwt token as legit, if it wasn't it would throw an error -> NO RELIANCE ON FRONTEND
         user = supabase.auth.get_user(credentials.credentials)
-        print(f"✅ Supabase response: {user}")
         return user.user
     except Exception as e:
-        print(f"❌ Error verifying token: {str(e)}")
-        
-        # Check if it's a session issue
-        if "session_id claim in JWT does not exist" in str(e):
-            print("⚠️ Session issue detected - JWT token references non-existent session")
-            print("💡 Try getting a fresh JWT token by signing out and back in")
-        
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid authentication credentials: {str(e)}",
@@ -34,17 +23,16 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         )
 
 
-# for testing 
+# testing 
 @router.get("/me")
 async def get_my_info(current_user = Depends(get_current_user)):
     return {
         "message": "Authentication successful!",
         "user_id": current_user.id,
         "email": current_user.email,
-        "user_metadata": current_user.user_metadata,
-        "created_at": current_user.created_at,
-        "last_sign_in_at": current_user.last_sign_in_at
     }
+
+
 
 @router.delete("/delete-account")
 async def delete_account(current_user = Depends(get_current_user)):
