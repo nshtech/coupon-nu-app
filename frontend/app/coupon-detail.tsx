@@ -168,16 +168,16 @@ export default function CouponDetail() {
             <Text className="text-gray-500 text-lg">Coupon Image</Text>
           </View>
           
-          <View className="items-center mb-6">
-            <Text className="text-black text-3xl font-inter-bold mb-2">{coupon.vendor}</Text>
-            <Text className="text-black text-lg font-inter-regular mb-2">{coupon.offer}</Text>
+          <View className="items-center mb-6 w-full">
+            <Text className="text-black text-3xl font-inter-bold mb-2 text-center">{coupon.vendor}</Text>
+            <Text className="text-black text-lg font-inter-regular mb-2 text-center">{coupon.offer}</Text>
             
             {isActivated === false ? (
-              <Text className="text-black text-xl font-inter-bold">
+              <Text className="text-black text-xl font-inter-bold text-center">
                 Expires on {formatExpirationDate(coupon.expiration_date, "date")}
               </Text>
             ) : (
-              <Text className="text-black text-xl font-inter-bold">
+              <Text className="text-black text-xl font-inter-bold text-center">
                 Expires on {formatExpirationDate(newExpirationDate || coupon.expiration_date, "timestamp")}
               </Text>
             )}
@@ -185,14 +185,14 @@ export default function CouponDetail() {
 
           {isActivated === false ? (
           <TouchableOpacity className="bg-purple-80 rounded-lg p-4 mb-4" onPress={handleUseCoupon}>
-            <Text className="text-white text-3xl px-2 font-inter-bold">Use Coupon</Text>
+            <Text className="text-white text-3xl px-2 font-inter-bold text-center">Use Coupon</Text>
           </TouchableOpacity>
           ) : (
-            <Text className="text-black text-3xl p-4 font-inter-bold">Redeemed!</Text>
+            <Text className="text-black text-3xl p-4 font-inter-bold text-center">Redeemed!</Text>
           )}
 
           <Pressable onPress={() => router.back()} className="p-2 mb-2">
-            <Text className="text-black text-xl font-inter-bold">Close</Text>
+            <Text className="text-black text-xl font-inter-bold text-center">Close</Text>
           </Pressable>
         </View>
       </View>
