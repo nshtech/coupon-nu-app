@@ -7,6 +7,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '@/utils/supabase';
 import { router } from 'expo-router';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { openPrivacyPolicy, openTermsOfService } from '@/utils/pdfViewer';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -90,18 +91,20 @@ export default function LogInScreen() {
 
             <View className="items-center justify-center gap-5 mt-60">
 
-                <TouchableOpacity className="bg-purple-80 px-16 py-2 rounded-lg" onPress={handleLogin}>
-                    <Text className="text-white text-2xl">Sign in with Google</Text>
+                <TouchableOpacity className="bg-purple-80 px-6 py-3 rounded-lg max-w-xs" onPress={handleLogin}>
+                    <Text className="text-white text-lg text-center leading-tight">
+                        Sign in with Northwestern Student Google Account
+                    </Text>
                 </TouchableOpacity>
 
                 <View>
                     <Text className="px-10 text-center text-dark-gray font-inter-medium">
 
-                        By clicking continue, you agree to our{' '}
+                        By clicking the above button, you agree to our{' '}
                         <Text 
                             className="font-inter-bold text-black" 
                             // terms of service scrollable native webview
-                            onPress={() => {}}
+                            onPress={openTermsOfService}
                         >
                             Terms of Service
                         </Text>
@@ -111,7 +114,7 @@ export default function LogInScreen() {
                         <Text 
                             className="font-inter-bold text-black" 
                             // privacy policy scrollable native webview
-                            onPress={() => {}}
+                            onPress={openPrivacyPolicy}
                         >
                             Privacy Policy
                         </Text>

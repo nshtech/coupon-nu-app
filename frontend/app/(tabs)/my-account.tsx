@@ -4,6 +4,7 @@ import { View, Text } from 'react-native';
 import { Settings, MessageCircleQuestionMark, File, Lock, Trash2, LogOut } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { openPrivacyPolicy, openTermsOfService } from '../../utils/pdfViewer';
 
 export default function MyAccount() {
 
@@ -47,6 +48,7 @@ export default function MyAccount() {
   }
 
 
+
   return (
     <View className="flex-1 bg-white">
       <View className="py-4 px-6 bg-purple-80"  >
@@ -69,12 +71,12 @@ export default function MyAccount() {
             <Text className="text-black text-lg font-inter-bold ml-3">Support</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity className="flex-row items-center p-4">
+          <TouchableOpacity className="flex-row items-center p-4" onPress={openTermsOfService}>
             <File size={24} color={Colors.NU_PURPLE} />
             <Text className="text-black text-lg font-inter-bold ml-3">Terms of Service</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity className="flex-row items-center p-4">
+          <TouchableOpacity className="flex-row items-center p-4" onPress={openPrivacyPolicy}>
             <Lock size={24} color={Colors.NU_PURPLE} />
             <Text className="text-black text-lg font-inter-bold ml-3">Privacy Policy</Text>
           </TouchableOpacity>
@@ -95,10 +97,8 @@ export default function MyAccount() {
           <Text className="text-purple-like-gray text-lg font-inter-medium">Version 1.0.0</Text>
         </View>
 
-
       </View>
     </View>
-
   );
 }
 

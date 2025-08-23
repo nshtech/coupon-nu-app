@@ -26,7 +26,7 @@ export default function TabLayout() {
             fontSize: 32,
             color: PURPLE_80,
           },
-          headerTitle: 'Purple Perks',
+          headerTitle: 'Purple Picks',
           tabBarIcon: ({ color }) => <TicketCheck size={28} color={color} />,
 
 
@@ -55,7 +55,7 @@ export default function TabLayout() {
             fontSize: 32,
             color: PURPLE_80,
           },
-          headerTitle: 'Purple Perks',
+          headerTitle: 'Purple Picks',
           tabBarIcon: ({ color }) => <UserRound size={28} color={color} />,
         }}
       />

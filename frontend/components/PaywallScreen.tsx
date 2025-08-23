@@ -4,7 +4,7 @@ import Colors, { DARK_GRAY } from "@/constants/Colors";
 import { TouchableOpacity } from "react-native";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useAuth } from "@/contexts/AuthContext";
-
+import { openPrivacyPolicy, openTermsOfService } from '@/utils/pdfViewer';
 
 
 export default function PaywallScreen() {
@@ -73,10 +73,10 @@ export default function PaywallScreen() {
             </View>
 
             <View className="mb-16 flex-row items-center justify-center gap-14">
-                <TouchableOpacity>
+                <TouchableOpacity onPress={openTermsOfService}>
                     <Text className="text-dark-gray text-lg font-inter-medium text-center">Terms of Service</Text>
                 </TouchableOpacity>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={openPrivacyPolicy}>
                     <Text className="text-dark-gray text-lg font-inter-medium text-center">Privacy Policy</Text>
                 </TouchableOpacity>
             </View>

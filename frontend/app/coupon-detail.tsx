@@ -13,15 +13,15 @@ export default function CouponDetail() {
   const { user } = useAuth();
   const { userCouponToUsages, setUserCouponToUsages } = useUsage();
   
-  // anti-screenshots
-  useEffect(() => {
-    ScreenCapture.preventScreenCaptureAsync();
+  // // anti-screenshots
+  // useEffect(() => {
+  //   ScreenCapture.preventScreenCaptureAsync();
     
-    // allows screenshots when component unmounts
-    return () => {
-      ScreenCapture.allowScreenCaptureAsync();
-    };
-  }, []);
+  //   // this acts as a cleanup function that triggers when we unmount
+  //   return () => {
+  //     ScreenCapture.allowScreenCaptureAsync();
+  //   };
+  // }, []);
   
   // Parse the coupon data from the params with simple error handling
   let coupon = null;
@@ -159,7 +159,7 @@ export default function CouponDetail() {
 
   return (
     <View className="flex-1 bg-white">
-      <Text className="text-purple-80 text-5xl font-inter-bold text-center mt-24">Purple Perks</Text>
+      <Text className="text-purple-80 text-5xl font-inter-bold text-center mt-24">Purple Picks</Text>
 
       {/* Coupon content */}
       <View className="flex-1 justify-center items-center px-8">
