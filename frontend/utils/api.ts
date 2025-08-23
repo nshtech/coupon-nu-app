@@ -1,9 +1,9 @@
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export const deleteAccountAPI = async (accessToken: string) => {
     
     try {
-        const response = await fetch(`${BASE_URL}/api/delete-account`, {
+        const response = await fetch(`${API_BASE_URL}/api/delete-account`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${accessToken}`,

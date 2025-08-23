@@ -72,6 +72,16 @@ export default function MyCoupons() {
       if (couponsError) {
         console.error('Error fetching coupons:', couponsError);
       } else {
+        // console.log('Raw coupons data from database:', allCoupons);
+        // // Check for any problematic data
+        // allCoupons?.forEach((coupon, index) => {
+        //   if (!coupon.coupon_id) {
+        //     console.warn(`Coupon at index ${index} missing coupon_id:`, coupon);
+        //   }
+        //   if (coupon.coupon_id === null || coupon.coupon_id === undefined) {
+        //     console.warn(`Coupon at index ${index} has null/undefined coupon_id:`, coupon);
+        //   }
+        // });
         setAllCoupons(allCoupons);
       }
     } catch (error) {
@@ -158,7 +168,7 @@ export default function MyCoupons() {
                     <Text className="font-inter-bold text-xl text-dark-gray text-center">No active coupons found</Text>
                   ) : (
                     activeCoupons.map((coupon: any, index: number) => (
-                      <CouponThumbnail key={coupon.id || index} coupon={coupon} couponTab={couponTab} />
+                      <CouponThumbnail key={coupon.coupon_id || index} coupon={coupon} couponTab={couponTab} />
                     ))
                   )}
                 </View>
@@ -170,7 +180,7 @@ export default function MyCoupons() {
                     <Text className="font-inter-bold text-xl text-dark-gray text-center">No expired coupons found</Text>
                   ) : (
                     expiredCoupons.map((coupon: any, index: number) => (
-                      <CouponThumbnail key={coupon.id || index} coupon={coupon} couponTab={couponTab} />
+                      <CouponThumbnail key={coupon.coupon_id || index} coupon={coupon} couponTab={couponTab} />
                     ))
                   )}
                 </View>

@@ -14,7 +14,6 @@ export default function PaywallScreen() {
 
     return (
         <View className="flex-1 bg-white">
-            {/* X button in top-left corner */}
             <TouchableOpacity 
                 className="absolute top-16 left-6 z-10" 
                 onPress={logout}
@@ -22,7 +21,7 @@ export default function PaywallScreen() {
                 <X size={24} color={DARK_GRAY} />
             </TouchableOpacity>
 
-            {/* top section */}
+
             <View className="flex-col items-center justify-center gap-4 mt-10 py-10">
                 <GraduationCap size={100} color={Colors.PURPLE_80} strokeWidth={1.5} />
                     <Text className="text-5xl text-black font-inter-bold text-center leading-tight">
@@ -34,7 +33,7 @@ export default function PaywallScreen() {
                     </Text>
             </View>
             
-            {/* middle section */}
+
             <View className="flex-1 items-center justify-center p-4 mb-10">
                 <View className="flex-col items-center justify-center gap-1 max-w-xs">
 

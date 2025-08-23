@@ -9,9 +9,18 @@ export default function CouponThumbnail({ coupon, couponTab }: { coupon: any; co
     const handlePress = () => {
         if (couponTab === "expired") return;
         
-        // Encode the coupon data, map data, and usage setter to pass as URL parameters
-        const couponData = encodeURIComponent(JSON.stringify(coupon));
-        router.push(`/coupon-detail?coupon=${couponData}`);
+        // Simple validation
+        if (!coupon || !coupon.coupon_id || !coupon.vendor || !coupon.offer) {
+            console.error('Invalid coupon object:', coupon);
+            return;
+        }
+        
+        // Navigate with the coupon object directly as a param
+        // This avoids all the URL encoding issues
+        router.push({
+            pathname: '/coupon-detail',
+            params: { coupon: JSON.stringify(coupon) }
+        });
     };
 
     const couponUses = userCouponToUsages.get(coupon.coupon_id) || 0;

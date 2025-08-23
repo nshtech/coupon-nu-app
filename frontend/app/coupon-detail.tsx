@@ -5,22 +5,63 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext'; 
 import { useUsage } from '@/contexts/UsageContext';
-
-
-
+import * as ScreenCapture from 'expo-screen-capture';
 
 export default function CouponDetail() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { user } = useAuth();
   const { userCouponToUsages, setUserCouponToUsages } = useUsage();
-  // Parse the coupon data from the URL params
-  const coupon = params.coupon ? JSON.parse(decodeURIComponent(params.coupon as string)) : null;
   
-  if (!coupon) {
+  // anti-screenshots
+  useEffect(() => {
+    ScreenCapture.preventScreenCaptureAsync();
+    
+    // allows screenshots when component unmounts
+    return () => {
+      ScreenCapture.allowScreenCaptureAsync();
+    };
+  }, []);
+  
+  // Parse the coupon data from the params with simple error handling
+  let coupon = null;
+  let parseError = null;
+  
+  try {
+    if (params.coupon) {
+      const couponParam = params.coupon as string;
+      // console.log('Raw coupon param:', couponParam);
+      
+      // Simple JSON parse - no complex decoding needed
+      coupon = JSON.parse(couponParam);
+      // console.log('Parsed coupon object:', coupon);
+      
+    } else {
+      parseError = 'No coupon data provided';
+    }
+  } catch (error) {
+    console.error('Error parsing coupon data:', error);
+    console.error('Raw params:', params);
+    
+    if (error instanceof SyntaxError) {
+      parseError = 'Invalid JSON format in coupon data';
+    } else {
+      parseError = 'Failed to load coupon data';
+    }
+  }
+  
+  if (parseError || !coupon) {
     return (
       <View className="flex-1 bg-white justify-center items-center">
-        <Text className="text-black text-xl font-inter-bold">Coupon not found</Text>
+        <Text className="text-black text-xl font-inter-bold mb-4">
+          {parseError || 'Coupon not found'}
+        </Text>
+        <TouchableOpacity 
+          className="bg-purple-80 rounded-lg p-4" 
+          onPress={() => router.back()}
+        >
+          <Text className="text-white text-lg font-inter-bold">Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -118,17 +159,11 @@ export default function CouponDetail() {
 
   return (
     <View className="flex-1 bg-white">
-
-
       <Text className="text-purple-80 text-5xl font-inter-bold text-center mt-24">Purple Perks</Text>
 
       {/* Coupon content */}
       <View className="flex-1 justify-center items-center px-8">
-
-
-        
         <View className="bg-white mb-6 shadow-lg items-center w-full">
-
           <View className="w-full h-80 bg-gray-200 mb-4 justify-center items-center">
             <Text className="text-gray-500 text-lg">Coupon Image</Text>
           </View>
@@ -159,7 +194,6 @@ export default function CouponDetail() {
           <Pressable onPress={() => router.back()} className="p-2 mb-2">
             <Text className="text-black text-xl font-inter-bold">Close</Text>
           </Pressable>
-
         </View>
       </View>
     </View>
