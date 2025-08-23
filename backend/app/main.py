@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router as api_router
 
-app = FastAPI(title="Purple Perks API", version="1.0.0")
+app = FastAPI(title="Purple Picks API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
