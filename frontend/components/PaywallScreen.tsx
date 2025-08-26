@@ -13,7 +13,7 @@ export default function PaywallScreen() {
     const { logout } = useAuth();
 
     return (
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-white px-6">
             <TouchableOpacity 
                 className="absolute top-16 left-6 z-10" 
                 onPress={logout}
@@ -22,62 +22,76 @@ export default function PaywallScreen() {
             </TouchableOpacity>
 
 
-            <View className="flex-col items-center justify-center gap-4 mt-10 py-10">
+            <View className="flex-col items-center justify-center mt-20 mb-8">
                 <GraduationCap size={100} color={Colors.PURPLE_80} strokeWidth={1.5} />
-                    <Text className="text-5xl text-black font-inter-bold text-center leading-tight">
-                        Unlock Exclusive{'\n'}Student Deals
-                    </Text>
-
-                    <Text className="text-dark-gray text-2xl font-inter-medium text-center leading-tight">
-                        Save money at the Evanston spots{'\n'}you already know and love!
-                    </Text>
+                <Text className="text-4xl text-black font-inter-bold text-center leading-tight mt-4">
+                    Unlock Exclusive{'\n'}Student Deals
+                </Text>
+                <Text className="text-xl text-dark-gray font-inter-medium text-center leading-tight mt-4 px-4">
+                    Save money at the Evanston spots{'\n'}you already know and love!
+                </Text>
             </View>
             
 
-            <View className="flex-1 items-center justify-center p-4 mb-10">
-                <View className="flex-col items-center justify-center gap-1 max-w-xs">
-
-                    <View className="flex-row items-center p-4 justify-center">
-                        <Text className="text-4xl">✅</Text>
-                        <Text className="text-black text-3xl font-inter-bold ml-5 text-left">Quick and easy coupon redemption</Text>
+            <View className="flex-1 justify-center py-8 mb-8 px-8">
+                <View className="max-w-sm">
+                    <View className="flex-row items-start mb-12">
+                        <Text className="text-4xl mr-4 mt-1">✅</Text>
+                        <Text className="text-xl text-black font-inter-bold flex-1 leading-tight">
+                            Quick and easy coupon redemption
+                        </Text>
                     </View>
                     
-                    <View className="flex-row items-center p-4 justify-center">
-                        <Text className="text-4xl">💸</Text>
-                        <Text className="text-black text-3xl font-inter-bold ml-5 text-left">An estimated $300 in savings per quarter</Text>
+                    <View className="flex-row items-start mb-12">
+                        <Text className="text-4xl mr-4 mt-1">💸</Text>
+                        <Text className="text-xl text-black font-inter-bold flex-1 leading-tight">
+                            An estimated $300 in savings per quarter
+                        </Text>
                     </View>
                     
-                    <View className="flex-row items-center p-4 justify-center">
-                        <Text className="text-4xl">🙏</Text>
-                        <Text className="text-black text-3xl font-inter-bold ml-5 text-left">Support our network of local businesses</Text>
+                    <View className="flex-row items-start">
+                        <Text className="text-4xl mr-4 mt-1">🙏</Text>
+                        <Text className="text-xl text-black font-inter-bold flex-1 leading-tight">
+                            Support our network of local businesses
+                        </Text>
                     </View>
-
                 </View>
-
             </View>
 
 
 
 
-            <View className="flex-col items-center justify-center p-4 gap-4">
-                <Text className="text-dark-gray text-xl font-inter-medium text-center">$9.99/quarter</Text>
+            <View className="items-center mb-8">
+                <Text className="text-2xl text-dark-gray font-inter-medium text-center mb-6">
+                    $9.99/quarter
+                </Text>
 
-                <TouchableOpacity className="bg-purple-80 px-8 py-4 rounded-lg" onPress={() => subscribe()}>
+                <TouchableOpacity 
+                    className="bg-purple-80 px-12 py-4 rounded-lg mb-4 w-full max-w-xs" 
+                    onPress={() => subscribe()}
+                >
                     <Text className="text-white text-xl font-inter-semibold text-center">
                         Continue
                     </Text>
                 </TouchableOpacity>
+                
                 <TouchableOpacity onPress={() => getSubscription()}>
-                    <Text className="text-dark-gray text-xl font-inter-medium text-center">Restore Purchases</Text>
+                    <Text className="text-dark-gray text-lg font-inter-medium text-center">
+                        Restore Purchases
+                    </Text>
                 </TouchableOpacity>
             </View>
 
-            <View className="mb-16 flex-row items-center justify-center gap-14">
+            <View className="flex-row items-center justify-center gap-8 mb-8">
                 <TouchableOpacity onPress={openTermsOfService}>
-                    <Text className="text-dark-gray text-lg font-inter-medium text-center">Terms of Service</Text>
+                    <Text className="text-dark-gray text-base font-inter-medium text-center">
+                        Terms of Service
+                    </Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={openPrivacyPolicy}>
-                    <Text className="text-dark-gray text-lg font-inter-medium text-center">Privacy Policy</Text>
+                    <Text className="text-dark-gray text-base font-inter-medium text-center">
+                        Privacy Policy
+                    </Text>
                 </TouchableOpacity>
             </View>
             
