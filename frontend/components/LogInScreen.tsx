@@ -68,14 +68,14 @@ export default function LogInScreen() {
         }
 
 
-        // if (result.type === 'success') {
-        //     console.log('Waiting for session data...');
-        // } else {
-        //     console.warn('Login cancelled or failed:', result);
-        // }
+        if (result.type === 'success') {
+            console.log('Waiting for session data...');
+        } else {
+            console.warn('Login cancelled or failed:', result);
+        }
 
-        // const { data: session } = await supabase.auth.getSession();
-        // console.log('📦 Manual session check:', session);
+        const { data: session } = await supabase.auth.getSession();
+        console.log('📦 Manual session check:', session);
 
     };
 

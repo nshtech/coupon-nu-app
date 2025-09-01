@@ -35,6 +35,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
             console.error('Error signing out:', error);
             return;
         }
+
+        setSession(null);
+        setUser(null);
       };
 
     const deleteAccount = async () => {
