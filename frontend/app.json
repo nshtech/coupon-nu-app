@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "Willies Wallet",
+    "slug": "willieswallet",
     "owner": "studentholdings",
-    "currentFullName": "@studentholdings/frontend",
-    "originalFullName": "@studentholdings/frontend",
+    "currentFullName": "@studentholdings/willieswallet",
+    "originalFullName": "@studentholdings/willieswallet",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontend",
+    "scheme": "willieswallet",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -18,7 +18,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.frontend"
+      "bundleIdentifier": "com.studentholdings.willieswallet"
     },
     "android": {
       "adaptiveIcon": {
@@ -26,7 +26,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.frontend"
+      "package": "com.studentholdings.willieswallet"
     },
     "web": {
       "bundler": "metro",
@@ -41,12 +41,6 @@
     ],
     "experiments": {
       "typedRoutes": true
-    },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "0b710c37-ee22-41f0-8c5c-3bb9bc329075"
-      }
     }
   }
 }
