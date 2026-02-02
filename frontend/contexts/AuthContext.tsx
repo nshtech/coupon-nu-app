@@ -38,6 +38,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         setSession(null);
         setUser(null);
+        console.log("SESSION UPON LOGOUT",session);
+        console.log("USER UPON LOGOUT", user);
       };
 
     const deleteAccount = async () => {

@@ -12,21 +12,19 @@ import { openPrivacyPolicy, openTermsOfService } from '@/utils/pdfViewer';
 WebBrowser.maybeCompleteAuthSession();
 
 
-
 export default function LogInScreen() {
 
-    
 
     const { login } = useAuth();
 
     const { unsubscribe } = useSubscription();
 
-
     const redirectUri = AuthSession.makeRedirectUri();
+    
 
     const handleLogin = async () => {
 
-
+        console.log(redirectUri)
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
