@@ -22,11 +22,11 @@ export default function TabLayout() {
         options={{
           title: 'My Coupons',
           headerTitleStyle: {
-            fontFamily: 'Inter-Bold',
-            fontSize: 32,
+            fontFamily: 'Inter-700Bold',
+            fontSize: 28,
             color: PURPLE_80,
           },
-          headerTitle: 'Purple Picks',
+          headerTitle: "Willie's Wallet",
           tabBarIcon: ({ color }) => <TicketCheck size={28} color={color} />,
 
 
@@ -51,11 +51,11 @@ export default function TabLayout() {
         options={{
           title: 'My Account',
           headerTitleStyle: {
-            fontFamily: 'Inter-Bold',
-            fontSize: 32,
+            fontFamily: 'Inter-700Bold',
+            fontSize: 28,
             color: PURPLE_80,
           },
-          headerTitle: 'Purple Picks',
+          headerTitle: "Willie's Wallet",
           tabBarIcon: ({ color }) => <UserRound size={28} color={color} />,
         }}
       />

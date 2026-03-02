@@ -19,16 +19,20 @@ export default function LogInScreen() {
 
     const { unsubscribe } = useSubscription();
 
-    const redirectUri = AuthSession.makeRedirectUri();
+    const redirectUri = AuthSession.makeRedirectUri(
+        {scheme: 'willieswallet', path: 'auth-callback'} // updated this as a custom stable redirect uri
+    );
     
 
     const handleLogin = async () => {
 
-        console.log(redirectUri)
+        console.log('THIS IS THE REDIRECT URI:', redirectUri);
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: redirectUri,
+                redirectTo: redirectUri, 
+                skipBrowserRedirect: true, // this seems to be useless
+                queryParams: { prompt: 'select_account'} // THIS IS A HUGE FIX TO PREVENT AUTO RESIGNINS
             }
         });
 

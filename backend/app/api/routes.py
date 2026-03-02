@@ -8,7 +8,7 @@ security = HTTPBearer()
 
 @router.get("/")
 def read_root():
-    return {"message": "pucio!"}
+    return {"message": "yo!"}
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     try:
