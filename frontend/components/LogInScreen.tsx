@@ -32,7 +32,7 @@ export default function LogInScreen() {
             options: {
                 redirectTo: redirectUri, 
                 skipBrowserRedirect: true, // this seems to be useless
-                queryParams: { prompt: 'select_account'} // THIS IS A HUGE FIX TO PREVENT AUTO RESIGNINS
+                queryParams: { prompt: 'select_account'} // THIS IS A HUGE FIX TO PREVENT AUTO RESIGNIN
             }
         });
 
