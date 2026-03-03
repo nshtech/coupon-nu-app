@@ -12,8 +12,8 @@ export default function MyAccount() {
   const { unsubscribe, subscriptionExpiration } = useSubscription();
 
   const handleSupport = () => {
-    const email = 'purplepicks@studentholdings.org';
-    const subject = 'Support Request - PurplePicks';
+    const email = 'willieswallet@studentholdings.org';
+    const subject = 'Support Request - Willie\'s Wallet';
 
     const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
     
@@ -22,7 +22,7 @@ export default function MyAccount() {
         Linking.openURL(mailtoUrl);
       } else {
         console.log('Email app not available');
-        alert('Please email us at purplepicks@studentholdings.org with your issue!');
+        alert('Please email us at willieswallet@studentholdings.org with your issue!');
       }
     });
   };

@@ -159,7 +159,7 @@ export default function CouponDetail() {
 
   return (
     <View className="flex-1 bg-white">
-      <Text className="text-purple-80 text-5xl font-inter-bold text-center mt-24">Purple Picks</Text>
+      <Text className="text-purple-80 text-5xl font-inter-bold text-center mt-24">Willie's Wallet</Text>
 
       {/* Coupon content */}
       <View className="flex-1 justify-center items-center px-8">
