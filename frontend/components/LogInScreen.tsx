@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, TouchableOpacity, View, Text, Pressable } from 'react-native';
+import { Button, TouchableOpacity, View, Text, Pressable, Image } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import * as AuthSession from 'expo-auth-session';
 import { useAuthRequest } from 'expo-auth-session';
@@ -88,10 +88,13 @@ export default function LogInScreen() {
         <View className="flex-1 bg-white ">
 
             <View className="items-center py-10 mt-20 justify-center">
-                <Text className="text-purple-80 text-5xl font-inter-bold">Willie's Wallet</Text>
+                {/* <Text className="text-purple-80 text-5xl font-inter-bold">Willie's Wallet</Text> */}
+                <Image source={require('../assets/images/loginpagesplash.png')} className="w-1/2 h-1/2" resizeMode="contain"/>
             </View>
 
-            <View className="items-center justify-center gap-5 mt-60">
+
+
+            <View className="items-center justify-center gap-5 mt-0">
 
                 <TouchableOpacity className="bg-purple-80 px-6 py-3 rounded-lg max-w-xs" onPress={handleLogin}>
                     <Text className="text-white text-lg text-center leading-tight">

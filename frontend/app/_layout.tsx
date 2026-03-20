@@ -9,6 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import PaywallScreen from '@/components/PaywallScreen';
 import LogInScreen from '@/components/LogInScreen';
+import RestrictedDomainScreen from '@/components/RestrictedDomainScreen';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { SubscriptionProvider, useSubscription } from '@/contexts/SubscriptionContext';
 import * as WebBrowser from 'expo-web-browser';
@@ -77,11 +78,15 @@ export default function RootLayout() {
 function RootLayoutContent() {
 
   const { isSubscribed, isSubscriptionLoading } = useSubscription();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, isNorthwesternUser } = useAuth();
 
    // return the login screen before rending the paywall
    if (!isLoggedIn) {
     return <LogInScreen />;
+  }
+
+  if (!isNorthwesternUser) {
+    return <RestrictedDomainScreen />;
   }
 
   // wait for subscription status to load

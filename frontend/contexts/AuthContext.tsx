@@ -3,8 +3,12 @@ import { supabase } from '@/utils/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { deleteAccountAPI } from '../utils/api';
 
+const ENFORCE_NORTHWESTERN_DOMAIN =
+    process.env.EXPO_PUBLIC_ENFORCE_NORTHWESTERN_DOMAIN !== 'false';
+
 interface AuthContextType {
     isLoggedIn: boolean;
+    isNorthwesternUser: boolean;
     session: Session | null;
     user: User | null;
     login: () => void;
@@ -22,6 +26,7 @@ interface AuthProviderProps {
 // wraps parts of the app that need access to logged in state (the root)
 export function AuthProvider({ children }: AuthProviderProps) {
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+    const [isNorthwesternUser, setIsNorthwesternUser] = useState<boolean>(false);
     const [session, setSession] = useState<Session | null>(null);
     const [user, setUser] = useState<User | null>(null);
     const login = () => {
@@ -38,6 +43,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         setSession(null);
         setUser(null);
+        setIsNorthwesternUser(false);
         console.log("SESSION UPON LOGOUT",session);
         console.log("USER UPON LOGOUT", user);
       };
@@ -60,6 +66,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             setIsLoggedIn(false);
             setSession(null);
             setUser(null);
+            setIsNorthwesternUser(false);
             
         } catch (error) {
             console.error('Error deleting account:', error);
@@ -70,12 +77,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
 
     useEffect(() => {
+        const isNorthwesternEmail = (email?: string) =>
+            !!email && email.toLowerCase().endsWith('@northwestern.edu');
+
+        const isAllowedEmail = (email?: string) =>
+            !ENFORCE_NORTHWESTERN_DOMAIN || isNorthwesternEmail(email);
+
         // Get initial session
         supabase.auth.getSession().then(({ data: { session } }) => {
             setIsLoggedIn(!!session);
             if (session) {
                 setSession(session);
                 setUser(session.user);
+                setIsNorthwesternUser(isAllowedEmail(session.user.email));
+            } else {
+                setSession(null);
+                setUser(null);
+                setIsNorthwesternUser(false);
             }
         });
 
@@ -86,8 +104,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
             if (session) {
                 setSession(session);
                 setUser(session.user);
+                setIsNorthwesternUser(isAllowedEmail(session.user.email));
                 console.log('[AuthProvider] Session set!', session);
                 console.log("[AuthProvider] JWT Token:", session.access_token);
+            } else {
+                setSession(null);
+                setUser(null);
+                setIsNorthwesternUser(false);
             }
 
         });
@@ -99,6 +122,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // what is accessible to the children
     const contextValue: AuthContextType = {
         isLoggedIn,
+        isNorthwesternUser,
         session,
         user,
         login,

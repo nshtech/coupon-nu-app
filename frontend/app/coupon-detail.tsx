@@ -165,7 +165,7 @@ export default function CouponDetail() {
       <View className="flex-1 justify-center items-center px-8">
         <View className="bg-white mb-6 shadow-lg items-center w-full">
           <View className="w-full h-80 bg-gray-200 mb-4 justify-center items-center">
-            <Text className="text-gray-500 text-lg">Coupon Image</Text>
+            {/* <Text className="text-gray-500 text-lg">Coupon Image</Text> */}
           </View>
           
           <View className="items-center mb-6 w-full">
