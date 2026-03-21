@@ -65,13 +65,13 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
             const { data, error } = await supabase.from('subscriptions').insert({
                 user_id: user.id,
                 is_subscribed: true,
-                subscription_expiration: new Date('2026-01-01T00:00:00-06:00'), // January 1, 2026 Central Time
+                subscription_expiration: new Date('2026-06-13T00:00:00-06:00'), // June 13, 2026 Central Time
             })
             if (error) {
                 console.error('[SubscriptionProvider] Error creating subscription:', error);
             } else {
                 console.log('[SubscriptionProvider] Subscription created successfully');
-                setSubscriptionExpiration(new Date('2026-01-01T00:00:00-06:00'));
+                setSubscriptionExpiration(new Date('2026-06-13T00:00:00-06:00'));
                 setIsSubscribed(true);
             }
         } else {

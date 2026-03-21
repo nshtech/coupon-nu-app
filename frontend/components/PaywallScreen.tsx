@@ -6,6 +6,26 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { openPrivacyPolicy, openTermsOfService } from '@/utils/pdfViewer';
 
+import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
+
+// Make sure to configure a Paywall in the Dashboard first.
+async function presentPaywall(): Promise<boolean> {
+    
+    // Present paywall for current offering:
+    const paywallResult: PAYWALL_RESULT = await RevenueCatUI.presentPaywall();
+    
+    switch (paywallResult) {
+        case PAYWALL_RESULT.NOT_PRESENTED:
+        case PAYWALL_RESULT.ERROR:
+        case PAYWALL_RESULT.CANCELLED:
+            return false;
+        case PAYWALL_RESULT.PURCHASED:
+        case PAYWALL_RESULT.RESTORED:
+            return true;
+        default:
+            return false;
+    }
+}
 
 export default function PaywallScreen() {
 
@@ -63,12 +83,22 @@ export default function PaywallScreen() {
 
             <View className="items-center mb-8">
                 <Text className="text-2xl text-dark-gray font-inter-medium text-center mb-6">
-                    $9.99/quarter
+                    $4.99 for access throughout the rest of the quarter!
                 </Text>
-
-                <TouchableOpacity 
+                {/* <TouchableOpacity 
                     className="bg-purple-80 px-12 py-4 rounded-lg mb-4 w-full max-w-xs" 
                     onPress={() => subscribe()}
+                > */}
+                <TouchableOpacity 
+                    className="bg-purple-80 px-12 py-4 rounded-lg mb-4 w-full max-w-xs" 
+                    onPress={async () =>{
+                        const success = await presentPaywall();
+                        if (success) {
+                            subscribe();
+                        } else {
+                            console.log('Paywall cancelled');
+                        }
+                    }}
                 >
                     <Text className="text-white text-xl font-inter-semibold text-center">
                         Continue

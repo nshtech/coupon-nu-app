@@ -24,6 +24,8 @@ import { useColorScheme } from '@/components/useColorScheme';
 import "./../global.css"
 import { UsageProvider } from '@/contexts/UsageContext';
 
+import ConfigureRevenueCat from '@/utils/RevenueCat.js';
+
 export {
   // Catch any errors thrown by the Layout component.
   ErrorBoundary,
@@ -68,6 +70,7 @@ export default function RootLayout() {
     <AuthProvider>
       <SubscriptionProvider>
         <UsageProvider>
+          <ConfigureRevenueCat />
           <RootLayoutContent />
         </UsageProvider>
       </SubscriptionProvider>
