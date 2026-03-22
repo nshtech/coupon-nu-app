@@ -6,7 +6,7 @@ from app.config import supabase
 router = APIRouter(prefix="/api", tags=["api"])
 
 security = HTTPBearer()
-ENFORCE_NORTHWESTERN_DOMAIN = os.getenv("ENFORCE_NORTHWESTERN_DOMAIN", "true").lower() != "false"
+# ENFORCE_NORTHWESTERN_DOMAIN = os.getenv("ENFORCE_NORTHWESTERN_DOMAIN", "true").lower() != "false"
 
 @router.get("/")
 def read_root():
@@ -16,16 +16,16 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     try:
         # verify jwt token as legit, if it wasn't it would throw an error -> NO RELIANCE ON FRONTEND
         user = supabase.auth.get_user(credentials.credentials)
-        email = (user.user.email or "").lower()
-        if ENFORCE_NORTHWESTERN_DOMAIN and not email.endswith("@northwestern.edu"):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="This app is for Northwestern students only.",
-            )
+        # email = (user.user.email or "").lower()
+        # if ENFORCE_NORTHWESTERN_DOMAIN and not email.endswith("@northwestern.edu"):
+        #     raise HTTPException(
+        #         status_code=status.HTTP_403_FORBIDDEN,
+        #         detail="This app is for Northwestern students only.",
+        #     )
         return user.user
     except Exception as e:
-        if isinstance(e, HTTPException):
-            raise e
+        # if isinstance(e, HTTPException):
+        #     raise e
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid authentication credentials: {str(e)}",
