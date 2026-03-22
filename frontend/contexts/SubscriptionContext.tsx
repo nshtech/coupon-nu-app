@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { Platform } from 'react-native';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from './AuthContext';
+import Purchases from 'react-native-purchases';
+
+const ENTITLEMENT_ID = 'Quarter Coupon Pass';
+const isNative = Platform.OS === 'ios' || Platform.OS === 'android';
+
 
 interface SubscriptionContextType {
     isSubscribed: boolean;
@@ -42,41 +48,54 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     const subscribe = async () => {
 
         // create a subscription in the database
-        if (user) {
-
-            // check if user already has a subscription
-            const { data: existingData, error: existingError } = await supabase
-             .from('subscriptions')
-             .select('*')
-             .eq('user_id', user.id)
-             .single();
-            if (existingError) {
-                // question is should i keep this an error and keep users instantly in the subscription db?
-                console.log('[SubscriptionProvider] Subscription does not seem to exist:', existingError); 
-            } else if (existingData?.is_subscribed) {
-                console.log('[SubscriptionProvider] User already has a subscription');
-                setIsSubscribed(true);
-                setSubscriptionExpiration(existingData.subscription_expiration ? new Date(existingData.subscription_expiration) : null);
-                return;
-            }
-
-            // create a subscription in the database
-
-            const { data, error } = await supabase.from('subscriptions').insert({
-                user_id: user.id,
-                is_subscribed: true,
-                subscription_expiration: new Date('2026-06-13T00:00:00-06:00'), // June 13, 2026 Central Time
-            })
-            if (error) {
-                console.error('[SubscriptionProvider] Error creating subscription:', error);
-            } else {
-                console.log('[SubscriptionProvider] Subscription created successfully');
-                setSubscriptionExpiration(new Date('2026-06-13T00:00:00-06:00'));
-                setIsSubscribed(true);
-            }
-        } else {
+        if (!user) {
             console.error('[SubscriptionProvider] No user found');
+            return;
         }
+
+        if (!isNative || !Purchases) {
+            console.error("[SubscriptionProvider] Error with isNative or Purchases")
+            return;
+        }
+        
+        try {
+            await Purchases.logIn(user.id);
+
+            const offerings = await Purchases.getOfferings();
+            const pkg = offerings.current?.availablePackages[0];
+
+            if (!pkg) {
+                console.error('[SubscriptionProvider] No package available');
+            } else {
+                const { customerInfo } = await Purchases.purchasePackage(pkg);
+                console.log(Object.keys(customerInfo.entitlements.active));
+                const entitlement = customerInfo.entitlements.active[ENTITLEMENT_ID];
+
+                if (entitlement) {
+                    const { data, error } = await supabase.from('subscriptions').insert({
+                        user_id: user.id,
+                        is_subscribed: true,
+                        subscription_expiration: new Date('2026-06-13T00:00:00-06:00'), // June 13, 2026 Central Time
+                    })
+                    if (error) {
+                        console.error('[SubscriptionProvider] Error creating subscription:', error);
+                    } else {
+                        console.log('[SubscriptionProvider] Subscription created successfully');
+                        setSubscriptionExpiration(new Date('2026-06-13T00:00:00-06:00'));
+                        setIsSubscribed(true);
+                    }
+                } else {
+                    console.error('[SubscriptionProvider] No entitlement found');
+                    return;
+                }
+            }
+        } catch (err) {
+            if (err && typeof err === 'object' && 'userCancelled' in err) return;
+            console.error('[SubscriptionProvider] Purchase error:', err);
+            return;
+        }
+
+
     };
 
     const getSubscription = async (): Promise<void> => {

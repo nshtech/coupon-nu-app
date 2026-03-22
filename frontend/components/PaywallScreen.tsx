@@ -8,7 +8,6 @@ import { openPrivacyPolicy, openTermsOfService } from '@/utils/pdfViewer';
 
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 
-// Make sure to configure a Paywall in the Dashboard first.
 async function presentPaywall(): Promise<boolean> {
     
     // Present paywall for current offering:
@@ -85,11 +84,11 @@ export default function PaywallScreen() {
                 <Text className="text-2xl text-dark-gray font-inter-medium text-center mb-6">
                     $4.99 for access throughout the rest of the quarter!
                 </Text>
-                {/* <TouchableOpacity 
+                <TouchableOpacity 
                     className="bg-purple-80 px-12 py-4 rounded-lg mb-4 w-full max-w-xs" 
                     onPress={() => subscribe()}
-                > */}
-                <TouchableOpacity 
+                >
+                {/* <TouchableOpacity 
                     className="bg-purple-80 px-12 py-4 rounded-lg mb-4 w-full max-w-xs" 
                     onPress={async () =>{
                         const success = await presentPaywall();
@@ -99,7 +98,7 @@ export default function PaywallScreen() {
                             console.log('Paywall cancelled');
                         }
                     }}
-                >
+                > */}
                     <Text className="text-white text-xl font-inter-semibold text-center">
                         Continue
                     </Text>
