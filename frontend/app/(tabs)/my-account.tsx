@@ -12,7 +12,7 @@ export default function MyAccount() {
   const { unsubscribe, subscriptionExpiration } = useSubscription();
 
   const handleSupport = () => {
-    const email = 'willieswallet@studentholdings.org';
+    const email = 'tech@studentholdings.org';
     const subject = 'Support Request - Willie\'s Wallet';
 
     const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
@@ -22,7 +22,7 @@ export default function MyAccount() {
         Linking.openURL(mailtoUrl);
       } else {
         console.log('Email app not available');
-        alert('Please email us at willieswallet@studentholdings.org with your issue!');
+        alert('Please email us at tech@studentholdings.org with your issue!');
       }
     });
   };
@@ -55,7 +55,7 @@ export default function MyAccount() {
         {/* eventually this will be fetched from the OAuth session */}
         <Text className="text-white text-3xl font-inter-bold">{user?.user_metadata.full_name}</Text>
         <Text className="text-white text-lg font-inter-bold mb-5">{user?.email}</Text>
-        <Text className="text-white text-2xl font-inter-bold">Subscription renews on {subscriptionExpiration?.toLocaleDateString()}</Text>
+        <Text className="text-white text-2xl font-inter-bold">Spring Quarter Coupon Pass expires on {subscriptionExpiration?.toLocaleDateString()}</Text>
       </View>      
       <View className="flex-1 p-4">
         
