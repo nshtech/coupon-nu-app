@@ -81,7 +81,13 @@ export default function LogInScreen() {
 
     };
 
-
+    const handleReviewerLogin = async () => {
+        const { error } = await supabase.auth.signInWithPassword({
+            email: 'tech@studentholdings.org',
+            password: 'WilliesWallet123',
+        });
+        if (error) console.error('Reviewer login failed:', error);
+    };
 
 
     return (
@@ -100,6 +106,10 @@ export default function LogInScreen() {
                     <Text className="text-white text-lg text-center leading-tight">
                         Sign in with Northwestern Student Google Account
                     </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={handleReviewerLogin}>
+                    <Text className="text-dark-gray text-sm">Sign in for App Review</Text>
                 </TouchableOpacity>
 
                 <View>

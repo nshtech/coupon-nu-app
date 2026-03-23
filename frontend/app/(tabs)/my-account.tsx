@@ -47,6 +47,21 @@ export default function MyAccount() {
     ]);
   }
 
+  const handleManageSubscription = () => {
+    Alert.alert(
+      'Unsubscribe',
+      "Are you sure you want to unsubscribe from Willie's Wallet? This is irreversible and will remove your access to all features.",
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Yes, Cancel',
+          style: 'destructive',
+          onPress: () => unsubscribe(),
+        },
+      ]
+    );
+  }
+
 
 
   return (
@@ -61,9 +76,9 @@ export default function MyAccount() {
         
         {/* Settings */}
         <View className="space-y-4">
-          <TouchableOpacity className="flex-row items-center p-4" onPress={unsubscribe}>
+          <TouchableOpacity className="flex-row items-center p-4" onPress={handleManageSubscription}>
             <Settings size={24} color={Colors.NU_PURPLE} />
-            <Text className="text-black text-lg font-inter-bold ml-3">Manage Subscription</Text>
+            <Text className="text-black text-lg font-inter-bold ml-3">Unsubscribe</Text>
           </TouchableOpacity>
           
           <TouchableOpacity className="flex-row items-center p-4" onPress={handleSupport}>
