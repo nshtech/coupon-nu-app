@@ -82,10 +82,13 @@ export default function LogInScreen() {
     };
 
     const handleReviewerLogin = async () => {
-        const { error } = await supabase.auth.signInWithPassword({
-            email: 'tech@studentholdings.org',
-            password: 'WilliesWallet123',
-        });
+        const email = process.env.EXPO_PUBLIC_REVIEWER_EMAIL;
+        const password = process.env.EXPO_PUBLIC_REVIEWER_PASSWORD;
+        if (!email || !password) {
+            console.error('Reviewer credentials not configured. Set EXPO_PUBLIC_REVIEWER_EMAIL and EXPO_PUBLIC_REVIEWER_PASSWORD in .env');
+            return;
+        }
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) console.error('Reviewer login failed:', error);
     };
 
