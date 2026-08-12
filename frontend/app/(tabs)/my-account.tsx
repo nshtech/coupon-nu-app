@@ -70,7 +70,7 @@ export default function MyAccount() {
         {/* eventually this will be fetched from the OAuth session */}
         <Text className="text-white text-3xl font-inter-bold">{user?.user_metadata.full_name}</Text>
         <Text className="text-white text-lg font-inter-bold mb-5">{user?.email}</Text>
-        <Text className="text-white text-2xl font-inter-bold">Fall Quarter Coupon Pass expires on {subscriptionExpiration?.toLocaleDateString()}</Text>
+        <Text className="text-white text-2xl font-inter-bold">Fall Quarter Coupon Pass expires on {subscriptionExpiration ? subscriptionExpiration.toLocaleDateString('en-US', { timeZone: 'America/Chicago' }) : '—'}</Text>
       </View>      
       <View className="flex-1 p-4">
         
