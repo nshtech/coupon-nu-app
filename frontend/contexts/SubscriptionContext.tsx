@@ -14,9 +14,9 @@ interface SubscriptionContextType {
     subscriptionExpiration: Date | null;
     isSubscriptionLoading: boolean;
     getSubscription: () => Promise<void>;
-    subscribe: () => void;
+    subscribe: () => Promise<void>;
     restorePurchases: () => Promise<void>;
-    unsubscribe: () => void;
+    unsubscribe: () => Promise<void>;
     setIsSubscribed: (isSubscribed: boolean) => void;
     setSubscriptionExpiration: (expiration: Date | null) => void;
 }
