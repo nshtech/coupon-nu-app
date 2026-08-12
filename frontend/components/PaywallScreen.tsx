@@ -8,7 +8,7 @@ import { openPrivacyPolicy, openTermsOfService } from '@/utils/pdfViewer';
 
 export default function PaywallScreen() {
 
-    const { subscribe, getSubscription } = useSubscription();
+    const { subscribe, restorePurchases } = useSubscription();
     const { logout } = useAuth();
 
     return (
@@ -84,7 +84,7 @@ export default function PaywallScreen() {
                     </Text>
                 </TouchableOpacity>
                 
-                <TouchableOpacity onPress={() => getSubscription()}>
+                <TouchableOpacity onPress={() => restorePurchases()}>
                     <Text className="text-dark-gray text-lg font-inter-medium text-center">
                         Restore Purchases
                     </Text>

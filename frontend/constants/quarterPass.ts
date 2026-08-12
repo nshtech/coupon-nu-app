@@ -1,0 +1,4 @@
+export const QUARTER_PASS_NAME = 'Fall 2026 Quarter Pass';
+export const QUARTER_PASS_DISPLAY_DATE = 'December 13, 2026';
+export const QUARTER_PASS_EXPIRES_AT = '2026-12-13T23:59:59-06:00';
+export const QUARTER_PASS_EXPIRATION_DATE = new Date(QUARTER_PASS_EXPIRES_AT);

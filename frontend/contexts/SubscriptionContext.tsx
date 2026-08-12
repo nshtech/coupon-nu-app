@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from './AuthContext';
 import Purchases from 'react-native-purchases';
+import { QUARTER_PASS_EXPIRATION_DATE } from '@/constants/quarterPass';
 
 const ENTITLEMENT_ID = 'Quarter Coupon Pass';
 const isNative = Platform.OS === 'ios' || Platform.OS === 'android';
@@ -13,8 +14,9 @@ interface SubscriptionContextType {
     subscriptionExpiration: Date | null;
     isSubscriptionLoading: boolean;
     getSubscription: () => Promise<void>;
-    subscribe: () => void;
-    unsubscribe: () => void;
+    subscribe: () => Promise<void>;
+    restorePurchases: () => Promise<void>;
+    unsubscribe: () => Promise<void>;
     setIsSubscribed: (isSubscribed: boolean) => void;
     setSubscriptionExpiration: (expiration: Date | null) => void;
 }
@@ -72,16 +74,16 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
                 const entitlement = customerInfo.entitlements.active[ENTITLEMENT_ID];
 
                 if (entitlement) {
-                    const { data, error } = await supabase.from('subscriptions').insert({
+                    const { error } = await supabase.from('subscriptions').upsert({
                         user_id: user.id,
                         is_subscribed: true,
-                        subscription_expiration: new Date('2026-06-13T00:00:00-06:00'), // June 13, 2026 Central Time
-                    })
+                        subscription_expiration: QUARTER_PASS_EXPIRATION_DATE,
+                    }, { onConflict: 'user_id' })
                     if (error) {
                         console.error('[SubscriptionProvider] Error creating subscription:', error);
                     } else {
                         console.log('[SubscriptionProvider] Subscription created successfully');
-                        setSubscriptionExpiration(new Date('2026-06-13T00:00:00-06:00'));
+                        setSubscriptionExpiration(QUARTER_PASS_EXPIRATION_DATE);
                         setIsSubscribed(true);
                     }
                 } else {
@@ -96,6 +98,45 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         }
 
 
+    };
+
+    const restorePurchases = async (): Promise<void> => {
+        if (!user) {
+            console.error('[SubscriptionProvider] No user found');
+            return;
+        }
+
+        if (!isNative || !Purchases) {
+            console.error('[SubscriptionProvider] Error with isNative or Purchases');
+            return;
+        }
+
+        try {
+            await Purchases.logIn(user.id);
+            const customerInfo = await Purchases.restorePurchases();
+            const entitlement = customerInfo.entitlements.active[ENTITLEMENT_ID];
+
+            if (!entitlement) {
+                console.log('[SubscriptionProvider] No entitlement found on restore');
+                return;
+            }
+
+            const { error } = await supabase.from('subscriptions').upsert({
+                user_id: user.id,
+                is_subscribed: true,
+                subscription_expiration: QUARTER_PASS_EXPIRATION_DATE,
+            }, { onConflict: 'user_id' });
+
+            if (error) {
+                console.error('[SubscriptionProvider] Error saving restored subscription:', error);
+                return;
+            }
+
+            setIsSubscribed(true);
+            setSubscriptionExpiration(QUARTER_PASS_EXPIRATION_DATE);
+        } catch (err) {
+            console.error('[SubscriptionProvider] Restore error:', err);
+        }
     };
 
     const getSubscription = async (): Promise<void> => {
@@ -143,6 +184,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         isSubscriptionLoading,
         getSubscription,
         subscribe,
+        restorePurchases,
         unsubscribe,
         setIsSubscribed,
         setSubscriptionExpiration,
