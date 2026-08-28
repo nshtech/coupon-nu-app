@@ -81,18 +81,6 @@ export default function LogInScreen() {
 
     };
 
-    const handleReviewerLogin = async () => {
-        const email = process.env.EXPO_PUBLIC_REVIEWER_EMAIL;
-        const password = process.env.EXPO_PUBLIC_REVIEWER_PASSWORD;
-        if (!email || !password) {
-            console.error('Reviewer credentials not configured. Set EXPO_PUBLIC_REVIEWER_EMAIL and EXPO_PUBLIC_REVIEWER_PASSWORD in .env');
-            return;
-        }
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) console.error('Reviewer login failed:', error);
-    };
-
-
     return (
         <View className="flex-1 bg-white ">
 
@@ -109,10 +97,6 @@ export default function LogInScreen() {
                     <Text className="text-white text-lg text-center leading-tight">
                         Sign in with Northwestern Student Google Account
                     </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={handleReviewerLogin}>
-                    <Text className="text-dark-gray text-sm">Sign in for App Review</Text>
                 </TouchableOpacity>
 
                 <View>

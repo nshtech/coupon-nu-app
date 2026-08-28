@@ -5,7 +5,7 @@
     "owner": "studentholdings",
     "currentFullName": "@studentholdings/willieswallet",
     "originalFullName": "@studentholdings/willieswallet",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "willieswallet",
@@ -30,7 +30,7 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
+      "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
