@@ -77,8 +77,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
 
     useEffect(() => {
-        const isNorthwesternEmail = (email?: string) =>
-            !!email && email.toLowerCase().endsWith('@northwestern.edu');
+        const isNorthwesternEmail = (email?: string) => {
+            if (!email) return false;
+            const domain = email.toLowerCase().split('@')[1] ?? '';
+            return domain === 'northwestern.edu' || domain.endsWith('.northwestern.edu');
+        };
 
         const isAllowedEmail = (email?: string) =>
             !ENFORCE_NORTHWESTERN_DOMAIN || isNorthwesternEmail(email);
