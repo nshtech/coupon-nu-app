@@ -6,7 +6,7 @@ PODS:
   - EXJSONUtils (0.15.0)
   - EXManifests (1.0.10):
     - ExpoModulesCore
-  - Expo (54.0.34):
+  - Expo (54.0.31):
     - ExpoModulesCore
     - hermes-engine
     - RCTRequired
@@ -202,24 +202,31 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - ExpoAsset (12.0.13):
+  - ExpoAsset (12.0.12):
     - ExpoModulesCore
   - ExpoCrypto (15.0.8):
     - ExpoModulesCore
   - ExpoDocumentPicker (14.0.8):
     - ExpoModulesCore
-  - ExpoFileSystem (19.0.22):
+  - ExpoFileSystem (19.0.21):
     - ExpoModulesCore
-  - ExpoFont (14.0.11):
+  - ExpoFont (14.0.10):
     - ExpoModulesCore
   - ExpoHead (6.0.21):
     - ExpoModulesCore
     - RNScreens
+  - ExpoImage (3.0.11):
+    - ExpoModulesCore
+    - libavif/libdav1d
+    - SDWebImage (~> 5.21.0)
+    - SDWebImageAVIFCoder (~> 0.11.0)
+    - SDWebImageSVGCoder (~> 1.7.0)
+    - SDWebImageWebPCoder (~> 0.14.6)
   - ExpoKeepAwake (15.0.8):
     - ExpoModulesCore
   - ExpoLinking (8.0.11):
     - ExpoModulesCore
-  - ExpoModulesCore (3.0.30):
+  - ExpoModulesCore (3.0.29):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -256,6 +263,23 @@ PODS:
   - hermes-engine (0.81.5):
     - hermes-engine/Pre-built (= 0.81.5)
   - hermes-engine/Pre-built (0.81.5)
+  - libavif/core (1.0.0)
+  - libavif/libdav1d (1.0.0):
+    - libavif/core
+    - libdav1d (>= 0.6.0)
+  - libdav1d (1.2.0)
+  - libwebp (1.6.0):
+    - libwebp/demux (= 1.6.0)
+    - libwebp/mux (= 1.6.0)
+    - libwebp/sharpyuv (= 1.6.0)
+    - libwebp/webp (= 1.6.0)
+  - libwebp/demux (1.6.0):
+    - libwebp/webp
+  - libwebp/mux (1.6.0):
+    - libwebp/demux
+  - libwebp/sharpyuv (1.6.0)
+  - libwebp/webp (1.6.0):
+    - libwebp/sharpyuv
   - PurchasesHybridCommon (17.52.0):
     - RevenueCat (= 5.65.0)
   - PurchasesHybridCommonUI (17.52.0):
@@ -2271,6 +2295,17 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - SDWebImage (5.21.7):
+    - SDWebImage/Core (= 5.21.7)
+  - SDWebImage/Core (5.21.7)
+  - SDWebImageAVIFCoder (0.11.1):
+    - libavif/core (>= 0.11.0)
+    - SDWebImage (~> 5.10)
+  - SDWebImageSVGCoder (1.7.0):
+    - SDWebImage/Core (~> 5.6)
+  - SDWebImageWebPCoder (0.14.6):
+    - libwebp (~> 1.0)
+    - SDWebImage/Core (~> 5.17)
   - Yoga (0.0.0)
 
 DEPENDENCIES:
@@ -2289,6 +2324,7 @@ DEPENDENCIES:
   - ExpoFileSystem (from `../node_modules/expo-file-system/ios`)
   - ExpoFont (from `../node_modules/expo-font/ios`)
   - ExpoHead (from `../node_modules/expo-router/ios`)
+  - ExpoImage (from `../node_modules/expo-image/ios`)
   - ExpoKeepAwake (from `../node_modules/expo-keep-awake/ios`)
   - ExpoLinking (from `../node_modules/expo-linking/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
@@ -2378,10 +2414,17 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - libavif
+    - libdav1d
+    - libwebp
     - PurchasesHybridCommon
     - PurchasesHybridCommonUI
     - RevenueCat
     - RevenueCatUI
+    - SDWebImage
+    - SDWebImageAVIFCoder
+    - SDWebImageSVGCoder
+    - SDWebImageWebPCoder
 
 EXTERNAL SOURCES:
   EXApplication:
@@ -2414,6 +2457,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-font/ios"
   ExpoHead:
     :path: "../node_modules/expo-router/ios"
+  ExpoImage:
+    :path: "../node_modules/expo-image/ios"
   ExpoKeepAwake:
     :path: "../node_modules/expo-keep-awake/ios"
   ExpoLinking:
@@ -2591,20 +2636,21 @@ SPEC CHECKSUMS:
   EXConstants: fce59a631a06c4151602843667f7cfe35f81e271
   EXJSONUtils: 1d3e4590438c3ee593684186007028a14b3686cd
   EXManifests: a8d97683e5c7a3b026ffbd58559c64dc655b747b
-  Expo: 514ae3ec54a086aab509f255abfbf37be0fcc0e2
+  Expo: 04993fbd7b06dc98ffac58da8847298470dc3db1
   expo-dev-client: 425ee077d6754a98cfe3a2e2410d29b440b24c9d
   expo-dev-launcher: a4f4cdef064ab1fb8621e5b8c7c457cd6e9568c3
   expo-dev-menu: 05b18812110c175814c6af0d09dd658abcc5e00d
   expo-dev-menu-interface: 600df12ea01efecdd822daaf13cc0ac091775533
-  ExpoAsset: 9e5a7c9c0a9fb83ad5b2bb365141f2bd7f289b66
+  ExpoAsset: f867e55ceb428aab99e1e8c082b5aee7c159ea18
   ExpoCrypto: b6105ebaa15d6b38a811e71e43b52cd934945322
   ExpoDocumentPicker: 7cd9e71a0f66fb19eb0a586d6f26eee1284692e0
-  ExpoFileSystem: ad991457efaa14253723f1dda997eac6024c700d
-  ExpoFont: f543ce20a228dd702813668b1a07b46f51878d47
+  ExpoFileSystem: 858a44267a3e6e9057e0888ad7c7cfbf55d52063
+  ExpoFont: 35ac6191ed86bbf56b3ebd2d9154eda9fad5b509
   ExpoHead: 9719a74953454fac328e90f34eea55ebbb3bbbf9
+  ExpoImage: 686f972bff29525733aa13357f6691dc90aa03d8
   ExpoKeepAwake: 55f75eca6499bb9e4231ebad6f3e9cb8f99c0296
   ExpoLinking: 8f0aaf69aa56f832913030503b6263dc6f647f37
-  ExpoModulesCore: 9e6a5514828e7dd5ded9e99d33557be2d284e660
+  ExpoModulesCore: f3da4f1ab5a8375d0beafab763739dbee8446583
   ExpoScreenCapture: 73e5215ce972e245806c19a546ae0ffef33ead48
   ExpoSplashScreen: bc3cffefca2716e5f22350ca109badd7e50ec14d
   ExpoSystemUI: 2ad325f361a2fcd96a464e8574e19935c461c9cc
@@ -2612,6 +2658,9 @@ SPEC CHECKSUMS:
   EXUpdatesInterface: 5adf50cb41e079c861da6d9b4b954c3db9a50734
   FBLazyVector: e95a291ad2dadb88e42b06e0c5fb8262de53ec12
   hermes-engine: 9f4dfe93326146a1c99eb535b1cb0b857a3cd172
+  libavif: 5f8e715bea24debec477006f21ef9e95432e254d
+  libdav1d: 23581a4d8ec811ff171ed5e2e05cd27bad64c39f
+  libwebp: af5937a13536ef73f3784d69cc342b98961acf33
   PurchasesHybridCommon: 27cca251e01998c53a6b31bf53baf09f84926609
   PurchasesHybridCommonUI: fb64dd31451c45a11aa9ac0cd40aac8c0a88b2d0
   RCTDeprecation: 943572d4be82d480a48f4884f670135ae30bf990
@@ -2690,6 +2739,10 @@ SPEC CHECKSUMS:
   RNScreens: d8d6f1792f6e7ac12b0190d33d8d390efc0c1845
   RNSVG: 31d6639663c249b7d5abc9728dde2041eb2a3c34
   RNWorklets: 76fce72926e28e304afb44f0da23b2d24f2c1fa0
+  SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
+  SDWebImageAVIFCoder: afe194a084e851f70228e4be35ef651df0fc5c57
+  SDWebImageSVGCoder: 15a300a97ec1c8ac958f009c02220ac0402e936c
+  SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
   Yoga: 5934998fbeaef7845dbf698f698518695ab4cd1a
 
 PODFILE CHECKSUM: 43acd1faf367915c6df68f28c9412fca706e0223
