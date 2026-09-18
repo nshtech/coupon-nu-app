@@ -1,11 +1,14 @@
-import { View, Text, Pressable, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, Pressable, TouchableOpacity, Alert } from 'react-native';
+import { Image } from 'expo-image';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-import { useAuth } from '@/contexts/AuthContext'; 
+import { useAuth } from '@/contexts/AuthContext';
 import { useUsage } from '@/contexts/UsageContext';
 import * as ScreenCapture from 'expo-screen-capture';
+
+const BLURHASH = '|rF?hV%2WCj[ayj[a|j[az_3fQjZa|j[azf6fQfQfQIpWBj[ayj[a|fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[ayfQfQpwj[fQjEIpayfQj[a|fQjuey';
 
 export default function CouponDetail() {
   const router = useRouter();
@@ -100,6 +103,7 @@ export default function CouponDetail() {
 
   const [isActivated, setIsActivated] = useState<boolean>(false);
   const [newExpirationDate, setNewExpirationDate] = useState<string>();
+  const [imageFailed, setImageFailed] = useState<boolean>(false);
   
   // navigate back after 2 min are up
   useEffect(() => {
@@ -164,8 +168,19 @@ export default function CouponDetail() {
       {/* Coupon content */}
       <View className="flex-1 justify-center items-center px-8">
         <View className="bg-white mb-6 shadow-lg items-center w-full">
-          <View className="w-full h-80 bg-gray-200 mb-4 justify-center items-center">
-            {/* <Text className="text-gray-500 text-lg">Coupon Image</Text> */}
+          <View className="w-full h-80 bg-gray-200 mb-4 justify-center items-center overflow-hidden">
+            {coupon.image_url && !imageFailed ? (
+              <Image
+                source={{ uri: coupon.image_url }}
+                placeholder={{ blurhash: BLURHASH }}
+                transition={200}
+                contentFit="cover"
+                onError={() => setImageFailed(true)}
+                style={{ width: '100%', height: '100%' }}
+              />
+            ) : (
+              <Ionicons name="pricetag-outline" size={64} color="#9CA3AF" />
+            )}
           </View>
           
           <View className="items-center mb-6 w-full">

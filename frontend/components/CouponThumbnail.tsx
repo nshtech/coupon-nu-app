@@ -1,10 +1,15 @@
 import { View, Text, Pressable } from 'react-native';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { useUsage } from '@/contexts/UsageContext';
+
+const BLURHASH = '|rF?hV%2WCj[ayj[a|j[az_3fQjZa|j[azf6fQfQfQIpWBj[ayj[a|fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[ayfQfQpwj[fQjEIpayfQj[a|fQjuey';
 
 export default function CouponThumbnail({ coupon, couponTab }: { coupon: any; couponTab: "active" | "expired" }) {
     const router = useRouter();
     const { userCouponToUsages } = useUsage();
+    const [imageFailed, setImageFailed] = useState(false);
 
     const handlePress = () => {
         if (couponTab === "expired") return;
@@ -34,7 +39,18 @@ export default function CouponThumbnail({ coupon, couponTab }: { coupon: any; co
             className={`${couponTab === "expired" ? 'opacity-50' : 'active:opacity-70'}`}
             disabled={couponTab === "expired"}
         >
-            <View className={`bg-white p-4 shadow-sm rounded-lg border border-gray-100 ${couponTab === "expired" ? 'bg-gray-50' : ''}`}>
+            <View className={`bg-white shadow-sm rounded-lg border border-gray-100 overflow-hidden ${couponTab === "expired" ? 'bg-gray-50' : ''}`}>
+                {coupon.image_url && !imageFailed ? (
+                    <Image
+                        source={{ uri: coupon.image_url }}
+                        placeholder={{ blurhash: BLURHASH }}
+                        transition={200}
+                        contentFit="cover"
+                        onError={() => setImageFailed(true)}
+                        style={{ width: '100%', height: 140, opacity: couponTab === "expired" ? 0.5 : 1 }}
+                    />
+                ) : null}
+              <View className="p-4">
                 <Text className={`text-3xl font-inter-bold ${couponTab === "expired" ? 'text-gray-500' : 'text-black'}`}>
                     {coupon.vendor}
                 </Text>
@@ -58,6 +74,7 @@ export default function CouponThumbnail({ coupon, couponTab }: { coupon: any; co
                     </Text>
                 )}
 
+              </View>
             </View>
         </Pressable>
     );
