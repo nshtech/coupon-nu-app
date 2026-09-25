@@ -105,7 +105,7 @@ export default function CouponDetail() {
   }
 
   // gate coupon usage behind the paywall — browsing the list stays free
-  if (!isSubscribed) {
+  if (!isSubscribed && !usedAt) {
     return <PaywallScreen onClose={() => router.back()} />;
   }
 
