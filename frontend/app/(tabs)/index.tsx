@@ -19,7 +19,7 @@ export default function MyCoupons() {
   const [activeCoupons, setActiveCoupons] = useState<any[]>([]);
   const [expiredCoupons, setExpiredCoupons] = useState<any[]>([]);
 
-  const { userCouponToUsages, setUserCouponToUsages } = useUsage();
+  const { userCouponToUsages, setUserCouponToUsages, setUserCouponToLastUsedAt } = useUsage();
   const [allCoupons, setAllCoupons] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -28,7 +28,7 @@ export default function MyCoupons() {
     const usageCounts = new Map<number, number>();
 
     if (!usedCouponData) return usageCounts;
-    
+
     usedCouponData.forEach(usage => {
       const couponId = usage.coupon_id;
       const currCount = usageCounts.get(couponId) || 0;
@@ -37,15 +37,31 @@ export default function MyCoupons() {
     return usageCounts;
   }
 
+  // helper to build a map of coupon_id to the most recent used_at timestamp
+  const buildUserCouponToLastUsedAt = (usedCouponData: any[]): Map<number, string> => {
+    const lastUsedAt = new Map<number, string>();
 
-  // fetch coupon usages for the user, and feed to the map building helper
+    if (!usedCouponData) return lastUsedAt;
+
+    usedCouponData.forEach(usage => {
+      const couponId = usage.coupon_id;
+      const existing = lastUsedAt.get(couponId);
+      if (!existing || new Date(usage.used_at) > new Date(existing)) {
+        lastUsedAt.set(couponId, usage.used_at);
+      }
+    });
+    return lastUsedAt;
+  }
+
+
+  // fetch coupon usages for the user, and feed to the map building helpers
   const fetchCouponUsages = async () => {
     if (!user) return;
 
     try {
       const { data: couponUsagesData, error: couponUsagesError } = await supabase
         .from('coupon_usages')
-        .select('coupon_id')
+        .select('coupon_id, used_at')
         .eq('user_id', user.id);
 
       if (couponUsagesError) {
@@ -53,6 +69,7 @@ export default function MyCoupons() {
       } else {
         const usageCounts = buildUserCouponToUsages(couponUsagesData);
         setUserCouponToUsages(usageCounts);
+        setUserCouponToLastUsedAt(buildUserCouponToLastUsedAt(couponUsagesData));
       }
     } catch (error) {
       console.error('Error fetching coupon usages:', error);
@@ -67,7 +84,8 @@ export default function MyCoupons() {
     try {
       const { data: allCoupons, error: couponsError } = await supabase
         .from('coupons')
-        .select('*');
+        .select('*')
+        .order('vendor', { ascending: true });
 
       if (couponsError) {
         console.error('Error fetching coupons:', couponsError);

@@ -6,16 +6,20 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { openPrivacyPolicy, openTermsOfService } from '@/utils/pdfViewer';
 
-export default function PaywallScreen() {
+interface PaywallScreenProps {
+    onClose?: () => void;
+}
+
+export default function PaywallScreen({ onClose }: PaywallScreenProps) {
 
     const { subscribe, restorePurchases } = useSubscription();
     const { logout } = useAuth();
 
     return (
         <View className="flex-1 bg-white px-6">
-            <TouchableOpacity 
-                className="absolute top-16 left-6 z-10" 
-                onPress={logout}
+            <TouchableOpacity
+                className="absolute top-16 left-6 z-10"
+                onPress={onClose ?? logout}
             >
                 <X size={24} color={DARK_GRAY} />
             </TouchableOpacity>

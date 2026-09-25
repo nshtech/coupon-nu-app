@@ -1,5 +1,4 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { View, Text } from 'react-native';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -7,11 +6,10 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
-import PaywallScreen from '@/components/PaywallScreen';
 import LogInScreen from '@/components/LogInScreen';
 import RestrictedDomainScreen from '@/components/RestrictedDomainScreen';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import { SubscriptionProvider, useSubscription } from '@/contexts/SubscriptionContext';
+import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 import * as WebBrowser from 'expo-web-browser';
 import {
   Inter_400Regular,
@@ -80,7 +78,6 @@ export default function RootLayout() {
 
 function RootLayoutContent() {
 
-  const { isSubscribed, isSubscriptionLoading } = useSubscription();
   const { isLoggedIn, isNorthwesternUser } = useAuth();
 
    // return the login screen before rending the paywall
@@ -92,20 +89,8 @@ function RootLayoutContent() {
     return <RestrictedDomainScreen />;
   }
 
-  // wait for subscription status to load
-  if (isSubscriptionLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <Text className="text-dark-gray text-xl font-inter-bold">Loading...</Text>
-      </View>
-    );
-  }
-
-  // after subscription loads, show the paywall if the user is not subscribed
-  if (!isSubscribed) {
-    return <PaywallScreen />;
-  }
-
+  // subscription (paywall) is now gated per-coupon in coupon-detail.tsx,
+  // not globally here — logged-in Northwestern users can browse the list freely.
   return <RootLayoutNav />;
 }
 
