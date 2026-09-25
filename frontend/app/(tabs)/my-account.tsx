@@ -1,15 +1,19 @@
 import { TouchableOpacity, Linking, Alert } from 'react-native';
-import Colors from '@/constants/Colors';
+import { BRAND_PURPLE } from '@/constants/Colors';
 import { View, Text } from 'react-native';
-import { Settings, MessageCircleQuestionMark, File, Lock, Trash2, LogOut } from 'lucide-react-native';
+import { Settings, MessageCircleQuestionMark, File, Lock, Trash2, LogOut, Sparkles } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { openPrivacyPolicy, openTermsOfService } from '../../utils/pdfViewer';
+import PaywallScreen from '@/components/PaywallScreen';
+import { useState } from 'react';
 
 export default function MyAccount() {
 
   const { user, logout, deleteAccount } = useAuth();
-  const { unsubscribe, subscriptionExpiration } = useSubscription();
+  const { unsubscribe, isSubscribed, subscriptionExpiration } = useSubscription();
+
+  const [showPaywall, setShowPaywall] = useState(false);
 
   const handleSupport = () => {
     const email = 'tech@studentholdings.org';
@@ -64,56 +68,65 @@ export default function MyAccount() {
 
 
 
+  const menuItems = [
+    isSubscribed
+      ? { icon: Settings, label: 'Unsubscribe', onPress: handleManageSubscription }
+      : { icon: Sparkles, label: 'Subscribe', onPress: () => setShowPaywall(true) },
+    { icon: MessageCircleQuestionMark, label: 'Support', onPress: handleSupport },
+    { icon: File, label: 'Terms of Service', onPress: openTermsOfService },
+    { icon: Lock, label: 'Privacy Policy', onPress: openPrivacyPolicy },
+    { icon: Trash2, label: 'Delete Account', onPress: handleDeleteAccount },
+    { icon: LogOut, label: 'Log Out', onPress: logout },
+  ];
+
+  // the paywall closes itself once the purchase lands and isSubscribed flips
+  if (showPaywall && !isSubscribed) {
+    return <PaywallScreen onClose={() => setShowPaywall(false)} />;
+  }
+
   return (
-    <View className="flex-1 bg-white">
-      <View className="py-4 px-6 bg-purple-80"  >
+    <View className="flex-1 bg-brand-cream-soft">
+      {/* profile header */}
+      <View className="rounded-b-[28px] bg-brand-purple px-6 pb-7 pt-4">
         {/* eventually this will be fetched from the OAuth session */}
-        <Text className="text-white text-3xl font-inter-bold">{user?.user_metadata.full_name}</Text>
-        <Text className="text-white text-lg font-inter-bold mb-5">{user?.email}</Text>
-        <Text className="text-white text-2xl font-inter-bold">Fall Quarter Coupon Pass expires on {subscriptionExpiration ? subscriptionExpiration.toLocaleDateString('en-US', { timeZone: 'America/Chicago' }) : '—'}</Text>
-      </View>      
-      <View className="flex-1 p-4">
-        
-        {/* Settings */}
-        <View className="space-y-4">
-          <TouchableOpacity className="flex-row items-center p-4" onPress={handleManageSubscription}>
-            <Settings size={24} color={Colors.NU_PURPLE} />
-            <Text className="text-black text-lg font-inter-bold ml-3">Unsubscribe</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity className="flex-row items-center p-4" onPress={handleSupport}>
-            <MessageCircleQuestionMark size={24} color={Colors.NU_PURPLE} />
-            <Text className="text-black text-lg font-inter-bold ml-3">Support</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity className="flex-row items-center p-4" onPress={openTermsOfService}>
-            <File size={24} color={Colors.NU_PURPLE} />
-            <Text className="text-black text-lg font-inter-bold ml-3">Terms of Service</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity className="flex-row items-center p-4" onPress={openPrivacyPolicy}>
-            <Lock size={24} color={Colors.NU_PURPLE} />
-            <Text className="text-black text-lg font-inter-bold ml-3">Privacy Policy</Text>
-          </TouchableOpacity>
+        <Text className="font-display text-3xl text-brand-cream">{user?.user_metadata.full_name}</Text>
+        <Text className="mt-1 font-body text-base text-brand-purple-soft">{user?.email}</Text>
 
-          <TouchableOpacity className="flex-row items-center p-4" onPress={handleDeleteAccount}>
-            <Trash2 size={24} color={Colors.NU_PURPLE} />
-            {/* modal to confirm deletion and later redirect to log in screen (setting isLoggedIn context to false) */}
-            <Text className="text-black text-lg font-inter-bold ml-3">Delete Account</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity className="flex-row items-center p-4" onPress={logout}>
-            <LogOut size={24} color={Colors.NU_PURPLE} />
-            <Text className="text-black text-lg font-inter-bold ml-3">Log Out</Text>
-          </TouchableOpacity>
+        <View className="mt-5 rounded-xl bg-white px-4 py-3">
+          <Text className="font-body-medium text-xs uppercase tracking-widest text-brand-purple-soft">
+            Fall Quarter Coupon Pass
+          </Text>
+          <Text className="mt-1 font-display text-xl text-brand-purple">
+            {isSubscribed
+              ? `Expires ${subscriptionExpiration ? subscriptionExpiration.toLocaleDateString('en-US', { timeZone: 'America/Chicago' }) : '—'}`
+              : 'Not active yet'}
+          </Text>
+        </View>
+      </View>
+
+      <View className="flex-1 px-5 pt-5">
+        <View className="overflow-hidden rounded-card border border-brand-tan bg-white">
+          {menuItems.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <TouchableOpacity
+                key={item.label}
+                className={`flex-row items-center px-4 py-4 active:bg-brand-cream-soft ${index > 0 ? 'border-t border-brand-cream' : ''}`}
+                onPress={item.onPress}
+              >
+                <View className="h-9 w-9 items-center justify-center rounded-full bg-brand-cream">
+                  <Icon size={20} color={BRAND_PURPLE} />
+                </View>
+                <Text className="ml-3 font-body-medium text-base text-brand-ink">{item.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
-        <View className="flex-1 justify-end items-center">
-          <Text className="text-purple-like-gray text-lg font-inter-medium">Version 1.0.0</Text>
+        <View className="flex-1 items-center justify-end pb-6">
+          <Text className="font-body text-sm text-brand-purple-soft">Version 1.0.0</Text>
         </View>
-
       </View>
     </View>
   );
 }
-

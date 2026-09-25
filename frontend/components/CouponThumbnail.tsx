@@ -45,12 +45,16 @@ export default function CouponThumbnail({ coupon, couponTab }: { coupon: any; co
     const isExpired = couponTab === "expired";
     const isLocked = isExpired || !isSubscribed;
 
+    const usesLabel = Number.isFinite(remainingUses)
+        ? `${remainingUses} use${remainingUses === 1 ? '' : 's'} left`
+        : 'Unlimited uses';
+
     return (
         <Pressable
             onPress={handlePress}
-            className={`${isLocked ? 'opacity-50' : 'active:opacity-70'}`}
+            className={`${isLocked ? 'opacity-60' : 'active:opacity-80'}`}
         >
-            <View className={`bg-white shadow-sm rounded-lg border border-gray-100 overflow-hidden ${isLocked ? 'bg-gray-50' : ''}`}>
+            <View className="overflow-hidden rounded-card border border-brand-tan bg-white shadow-sm">
                 {coupon.image_url && !imageFailed ? (
                     <Image
                         source={{ uri: coupon.image_url }}
@@ -58,34 +62,29 @@ export default function CouponThumbnail({ coupon, couponTab }: { coupon: any; co
                         transition={200}
                         contentFit="cover"
                         onError={() => setImageFailed(true)}
-                        style={{ width: '100%', height: 140, opacity: isLocked ? 0.5 : 1 }}
+                        style={{ width: '100%', height: 150, opacity: isLocked ? 0.6 : 1 }}
                     />
-                ) : null}
-              <View className="p-4">
-                <Text className={`text-3xl font-inter-bold ${isLocked ? 'text-gray-500' : 'text-black'}`}>
-                    {coupon.vendor}
-                </Text>
-                <Text className={`text-lg font-inter-regular ${isLocked ? 'text-gray-400' : 'text-black'}`}>
-                    {isSubscribed ? coupon.offer : 'Unlock to see the deal!'}
-                </Text>
-
-                {Number.isFinite(remainingUses) ? (
-                    remainingUses === 1 ? (
-                        <Text className={`text-lg font-inter-regular ${isLocked ? 'text-gray-400' : 'text-black'}`}>
-                            {remainingUses} use remaining
-                        </Text>
-                    ) : (
-                        <Text className={`text-lg font-inter-regular ${isLocked ? 'text-gray-400' : 'text-black'}`}>
-                            {remainingUses} uses remaining
-                        </Text>
-                    )
                 ) : (
-                    <Text className={`text-lg font-inter-regular ${isLocked ? 'text-gray-400' : 'text-black'}`}>
-                        Unlimited uses
-                    </Text>
+                    <View className="h-4 w-full bg-brand-cream" />
                 )}
 
-              </View>
+                <View className="p-4">
+                    <Text
+                        className={`font-display text-2xl ${isLocked ? 'text-brand-purple-soft' : 'text-brand-purple'}`}
+                        numberOfLines={1}
+                    >
+                        {coupon.vendor}
+                    </Text>
+                    <Text
+                        className={`mt-1 font-body text-base ${isLocked ? 'text-brand-purple-soft' : 'text-brand-ink'}`}
+                    >
+                        {isSubscribed ? coupon.offer : 'Unlock to see the deal!'}
+                    </Text>
+
+                    <Text className="mt-2 font-body-medium text-sm text-brand-purple-soft">
+                        {isExpired ? 'Redeemed' : usesLabel}
+                    </Text>
+                </View>
             </View>
         </Pressable>
     );

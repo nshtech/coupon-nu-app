@@ -1,18 +1,43 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 
-import { NU_PURPLE, PURPLE_80 } from '@/constants/Colors';
+import {
+  BRAND_CREAM_SOFT,
+  BRAND_PURPLE,
+  BRAND_PURPLE_SOFT,
+  BRAND_TAN,
+} from '@/constants/Colors';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 
 import { TicketCheck, UserRound } from 'lucide-react-native';
 
-export default function TabLayout() {
-  // const colorScheme = useColorScheme();
+const headerOptions = {
+  headerTitle: "Willie's Wallet",
+  headerTitleAlign: 'center' as const,
+  headerShadowVisible: false,
+  headerStyle: { backgroundColor: BRAND_PURPLE },
+  headerTitleStyle: {
+    fontFamily: 'Fredoka_700Bold',
+    fontSize: 26,
+    color: '#ffffff',
+  },
+};
 
+export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: NU_PURPLE,
+        tabBarActiveTintColor: BRAND_PURPLE,
+        tabBarInactiveTintColor: BRAND_PURPLE_SOFT,
+        tabBarStyle: {
+          backgroundColor: BRAND_CREAM_SOFT,
+          borderTopColor: BRAND_TAN,
+          borderTopWidth: 1,
+        },
+        tabBarLabelStyle: {
+          fontFamily: 'Ubuntu_500Medium',
+          fontSize: 12,
+        },
         // Disable the static render of the header on web
         // to prevent a hydration error in React Navigation v6.
         headerShown: useClientOnlyValue(false, true),
@@ -20,43 +45,17 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
+          ...headerOptions,
           title: 'My Coupons',
-          headerTitleStyle: {
-            fontFamily: 'Inter-700Bold',
-            fontSize: 28,
-            color: PURPLE_80,
-          },
-          headerTitle: "Willie's Wallet",
-          tabBarIcon: ({ color }) => <TicketCheck size={28} color={color} />,
-
-
-          // info icon in top header
-          
-          // headerRight: () => (
-          //   <Link href="/modal" asChild>
-          //     <Pressable>
-          //       <FontAwesome
-          //         name="info-circle"
-          //         size={25}
-          //         color={'black'}
-          //         className="mr-[15px]"
-          //       />
-          //     </Pressable>
-          //   </Link>
-          // ),
+          tabBarIcon: ({ color }) => <TicketCheck size={26} color={color} />,
         }}
       />
       <Tabs.Screen
         name="my-account"
         options={{
+          ...headerOptions,
           title: 'My Account',
-          headerTitleStyle: {
-            fontFamily: 'Inter-700Bold',
-            fontSize: 28,
-            color: PURPLE_80,
-          },
-          headerTitle: "Willie's Wallet",
-          tabBarIcon: ({ color }) => <UserRound size={28} color={color} />,
+          tabBarIcon: ({ color }) => <UserRound size={26} color={color} />,
         }}
       />
     </Tabs>

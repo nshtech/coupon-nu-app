@@ -5,7 +5,7 @@ import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import CouponThumbnail from '@/components/CouponThumbnail';
 import { useUsage } from '@/contexts/UsageContext';
-import { DARK_GRAY } from '@/constants/Colors';
+import { BRAND_PURPLE_SOFT } from '@/constants/Colors';
 
 export default function MyCoupons() {
 
@@ -148,67 +148,68 @@ export default function MyCoupons() {
 
 
   
+  const tabs: { key: "active" | "expired"; label: string; count: number }[] = [
+    { key: "active", label: "Active", count: activeCoupons.length },
+    { key: "expired", label: "Expired", count: expiredCoupons.length },
+  ];
+
+  const visibleCoupons = couponTab === "active" ? activeCoupons : expiredCoupons;
+
   return (
-    
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-brand-cream-soft">
 
-      {/* purple bar */}
-      <View className="bg-purple-80 flex-row">
-
-        {/* active tab */}
-        <Pressable className="flex-1 items-center flex-col justify-end" onPress={() => setCouponTab("active")}>
-          <Text className="text-white text-3xl font-inter-bold mb-2 pt-5 pb-1">Active ({activeCoupons.length})</Text>
-          <View className={`h-1 w-full absolute-bottom-0 ${couponTab === "active" ? "bg-white" : "bg-transparent"}`} />
-        </Pressable>
-
-        {/* expired tab */}
-        <Pressable className="flex-1 items-center flex-col justify-end" onPress={() => setCouponTab("expired")}>
-          <Text className="text-white text-3xl font-inter-bold mb-2 pt-5 pb-1">Expired ({expiredCoupons.length})</Text>
-          <View className={`h-1 w-full absolute-bottom-0 ${couponTab === "expired" ? "bg-white" : "bg-transparent"}`} />
-        </Pressable>
+      {/* segmented control */}
+      <View className="bg-brand-purple px-4 pb-5">
+        <View className="flex-row rounded-xl bg-brand-purple-mid/40 p-1">
+          {tabs.map((tab) => {
+            const isSelected = couponTab === tab.key;
+            return (
+              <Pressable
+                key={tab.key}
+                onPress={() => setCouponTab(tab.key)}
+                className={`flex-1 items-center rounded-lg py-2 ${isSelected ? "bg-white" : "bg-transparent"}`}
+              >
+                <Text
+                  className={`font-display text-xl ${isSelected ? "text-brand-purple" : "text-white/70"}`}
+                >
+                  {tab.label} ({tab.count})
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
-
 
       {/* rest of workable space */}
-
-      <View className="flex-1 bg-white p-4">
+      <View className="flex-1 px-5 pt-5">
         {isLoading ? (
-          <View className="flex-1 justify-center items-center">
-            <ActivityIndicator size="large" color={DARK_GRAY} />
-            <Text className="mt-2 text-dark-gray font-inter-bold text-xl">Loading...</Text>
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="large" color={BRAND_PURPLE_SOFT} />
+            <Text className="mt-3 font-display text-xl text-brand-purple-soft">Loading...</Text>
           </View>
         ) : (
-          <>
-            {couponTab === "active" ? (
-              <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-                <View className="gap-10 p-4">
-                  {activeCoupons.length === 0 ? (
-                    <Text className="font-inter-bold text-xl text-dark-gray text-center">No active coupons found</Text>
-                  ) : (
-                    activeCoupons.map((coupon: any, index: number) => (
-                      <CouponThumbnail key={coupon.coupon_id || index} coupon={coupon} couponTab={couponTab} />
-                    ))
-                  )}
+          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+            <View className="gap-5 pb-8">
+              {visibleCoupons.length === 0 ? (
+                <View className="mt-16 items-center rounded-card border border-brand-tan bg-brand-cream px-6 py-10">
+                  <Text className="text-center font-display text-xl text-brand-purple">
+                    No {couponTab} coupons found
+                  </Text>
+                  <Text className="mt-2 text-center font-body text-base text-brand-purple-soft">
+                    {couponTab === "active"
+                      ? "Check back soon for new Evanston deals!"
+                      : "Coupons you've fully redeemed will show up here."}
+                  </Text>
                 </View>
-              </ScrollView>
-            ) : (
-              <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-                <View className="gap-10 p-4">
-                  {expiredCoupons.length === 0 ? (
-                    <Text className="font-inter-bold text-xl text-dark-gray text-center">No expired coupons found</Text>
-                  ) : (
-                    expiredCoupons.map((coupon: any, index: number) => (
-                      <CouponThumbnail key={coupon.coupon_id || index} coupon={coupon} couponTab={couponTab} />
-                    ))
-                  )}
-                </View>
-              </ScrollView>
-            )}
-          </>
+              ) : (
+                visibleCoupons.map((coupon: any, index: number) => (
+                  <CouponThumbnail key={coupon.coupon_id || index} coupon={coupon} couponTab={couponTab} />
+                ))
+              )}
+            </View>
+          </ScrollView>
         )}
       </View>
-
-
 
     </View>
   );
