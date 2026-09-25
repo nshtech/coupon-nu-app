@@ -9,6 +9,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useUsage } from '@/contexts/UsageContext';
 import * as ScreenCapture from 'expo-screen-capture';
 import PaywallScreen from '@/components/PaywallScreen';
+import { BRAND_PURPLE_SOFT } from '@/constants/Colors';
 
 const BLURHASH = '|rF?hV%2WCj[ayj[a|j[az_3fQjZa|j[azf6fQfQfQIpWBj[ayj[a|fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[ayfQfQpwj[fQjEIpayfQj[a|fQjuey';
 
@@ -82,15 +83,15 @@ export default function CouponDetail() {
   
   if (parseError || !coupon) {
     return (
-      <View className="flex-1 bg-white justify-center items-center">
-        <Text className="text-black text-xl font-inter-bold mb-4">
+      <View className="flex-1 items-center justify-center bg-brand-cream-soft px-8">
+        <Text className="mb-6 text-center font-display text-2xl text-brand-purple">
           {parseError || 'Coupon not found'}
         </Text>
         <TouchableOpacity
-          className="bg-purple-80 rounded-lg p-4"
+          className="rounded-full bg-brand-purple px-8 py-4"
           onPress={() => router.back()}
         >
-          <Text className="text-white text-lg font-inter-bold">Go Back</Text>
+          <Text className="font-display text-lg text-brand-cream">Go Back</Text>
         </TouchableOpacity>
       </View>
     );
@@ -98,8 +99,8 @@ export default function CouponDetail() {
 
   if (isSubscriptionLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <Text className="text-dark-gray text-xl font-inter-bold">Loading...</Text>
+      <View className="flex-1 items-center justify-center bg-brand-cream-soft">
+        <Text className="font-display text-xl text-brand-purple-soft">Loading...</Text>
       </View>
     );
   }
@@ -181,14 +182,21 @@ export default function CouponDetail() {
     }
   }
 
+  const isRedeemed = Boolean(usedAt) || isActivated;
+
   return (
-    <View className="flex-1 bg-white">
-      <Text className="text-purple-80 text-5xl font-inter-bold text-center mt-24">Willie's Wallet</Text>
+    <View className="flex-1 bg-brand-cream-soft">
+      {/* brand header */}
+      <View className="rounded-b-[28px] bg-brand-purple px-6 pb-6 pt-16">
+        <Text className="text-center font-display-bold text-3xl text-white">
+          Willie's Wallet
+        </Text>
+      </View>
 
       {/* Coupon content */}
-      <View className="flex-1 justify-center items-center px-8">
-        <View className="bg-white mb-6 shadow-lg items-center w-full">
-          <View className="w-full h-80 bg-gray-200 mb-4 justify-center items-center overflow-hidden">
+      <View className="flex-1 items-center justify-center px-6">
+        <View className="w-full overflow-hidden rounded-card border border-brand-tan bg-white">
+          <View className="h-72 w-full items-center justify-center overflow-hidden bg-brand-cream">
             {coupon.image_url && !imageFailed ? (
               <Image
                 source={{ uri: coupon.image_url }}
@@ -199,47 +207,52 @@ export default function CouponDetail() {
                 style={{ width: '100%', height: '100%' }}
               />
             ) : (
-              <Ionicons name="pricetag-outline" size={64} color="#9CA3AF" />
+              <Ionicons name="pricetag-outline" size={64} color={BRAND_PURPLE_SOFT} />
             )}
           </View>
-          
-          <View className="items-center mb-6 w-full">
-            <Text className="text-black text-3xl font-inter-bold mb-2 text-center">{coupon.vendor}</Text>
-            <Text className="text-black text-lg font-inter-regular mb-2 text-center">{coupon.offer}</Text>
 
-            {usedAt ? (
-              <>
-                <Text className="text-black text-xl font-inter-bold text-center">
-                  Used on {formatExpirationDate(usedAt, "timestamp")}
+          <View className="items-center px-6 py-5">
+            <Text className="text-center font-display text-3xl text-brand-purple">{coupon.vendor}</Text>
+            <Text className="mt-2 text-center font-body text-base text-brand-ink">{coupon.offer}</Text>
+
+            <View className="mt-4 w-full rounded-2xl bg-brand-cream px-4 py-3">
+              {usedAt ? (
+                <>
+                  <Text className="text-center font-body-medium text-sm text-brand-purple">
+                    Used on {formatExpirationDate(usedAt, "timestamp")}
+                  </Text>
+                  <Text className="mt-1 text-center font-body-medium text-sm text-brand-purple">
+                    Expired on {formatExpirationDate(new Date(new Date(usedAt).getTime() + 2 * 60 * 1000).toISOString(), "timestamp")}
+                  </Text>
+                </>
+              ) : isActivated === false ? (
+                <Text className="text-center font-body-medium text-sm text-brand-purple">
+                  Expires on {formatExpirationDate(coupon.expiration_date, "date")}
                 </Text>
-                <Text className="text-black text-xl font-inter-bold text-center mt-1">
-                  Expired on {formatExpirationDate(new Date(new Date(usedAt).getTime() + 2 * 60 * 1000).toISOString(), "timestamp")}
+              ) : (
+                <Text className="text-center font-body-medium text-sm text-brand-purple">
+                  Expires on {formatExpirationDate(newExpirationDate || coupon.expiration_date, "timestamp")}
                 </Text>
-              </>
-            ) : isActivated === false ? (
-              <Text className="text-black text-xl font-inter-bold text-center">
-                Expires on {formatExpirationDate(coupon.expiration_date, "date")}
-              </Text>
+              )}
+            </View>
+
+            {isRedeemed ? (
+              <View className="mt-5 w-full rounded-full bg-brand-peach py-4">
+                <Text className="text-center font-display text-2xl text-brand-purple">Redeemed!</Text>
+              </View>
             ) : (
-              <Text className="text-black text-xl font-inter-bold text-center">
-                Expires on {formatExpirationDate(newExpirationDate || coupon.expiration_date, "timestamp")}
-              </Text>
+              <TouchableOpacity
+                className="mt-5 w-full rounded-full bg-brand-purple py-4 active:opacity-80"
+                onPress={handleUseCoupon}
+              >
+                <Text className="text-center font-display text-2xl text-brand-cream">Use Coupon</Text>
+              </TouchableOpacity>
             )}
+
+            <Pressable onPress={() => router.back()} className="mt-3 p-2">
+              <Text className="text-center font-body-medium text-base text-brand-purple-soft">Close</Text>
+            </Pressable>
           </View>
-
-          {usedAt ? (
-            <Text className="text-black text-3xl p-4 font-inter-bold text-center">Redeemed!</Text>
-          ) : isActivated === false ? (
-          <TouchableOpacity className="bg-purple-80 rounded-lg p-4 mb-4" onPress={handleUseCoupon}>
-            <Text className="text-white text-3xl px-2 font-inter-bold text-center">Use Coupon</Text>
-          </TouchableOpacity>
-          ) : (
-            <Text className="text-black text-3xl p-4 font-inter-bold text-center">Redeemed!</Text>
-          )}
-
-          <Pressable onPress={() => router.back()} className="p-2 mb-2">
-            <Text className="text-black text-xl font-inter-bold text-center">Close</Text>
-          </Pressable>
         </View>
       </View>
     </View>

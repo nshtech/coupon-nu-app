@@ -82,29 +82,30 @@ export default function LogInScreen() {
     };
 
     return (
-        <View className="flex-1 bg-white ">
+        <View className="flex-1 bg-white">
 
-            <View className="items-center py-10 mt-20 justify-center">
-                {/* <Text className="text-purple-80 text-5xl font-inter-bold">Willie's Wallet</Text> */}
-                <Image source={require('../assets/images/loginpagesplash.png')} className="w-1/2 h-1/2" resizeMode="contain"/>
+            <View className="mt-20 items-center justify-center py-10">
+                {/* <Text className="text-brand-purple font-display-bold text-5xl">Willie's Wallet</Text> */}
+                <Image source={require('../assets/images/loginpagesplash.png')} className="h-1/2 w-1/2" resizeMode="contain"/>
             </View>
 
+            <View className="mt-0 items-center justify-center gap-5 px-8">
 
-
-            <View className="items-center justify-center gap-5 mt-0">
-
-                <TouchableOpacity className="bg-purple-80 px-6 py-3 rounded-lg max-w-xs" onPress={handleLogin}>
-                    <Text className="text-white text-lg text-center leading-tight">
+                <TouchableOpacity
+                    className="w-full max-w-xs rounded-xl bg-brand-purple px-6 py-4 active:opacity-80"
+                    onPress={handleLogin}
+                >
+                    <Text className="text-center font-display text-lg leading-tight text-white">
                         Sign in with Northwestern Student Google Account
                     </Text>
                 </TouchableOpacity>
 
                 <View>
-                    <Text className="px-10 text-center text-dark-gray font-inter-medium">
+                    <Text className="px-8 text-center font-body text-sm leading-tight text-brand-purple-soft">
 
-                        By clicking the above button, you agree to our{' '}
-                        <Text 
-                            className="font-inter-bold text-black" 
+                        By clicking the above button, you agree to our{'\n'}
+                        <Text
+                            className="font-body-bold text-brand-purple"
                             // terms of service scrollable native webview
                             onPress={openTermsOfService}
                         >
@@ -113,8 +114,8 @@ export default function LogInScreen() {
 
                         {' '}and{' '}
 
-                        <Text 
-                            className="font-inter-bold text-black" 
+                        <Text
+                            className="font-body-bold text-brand-purple"
                             // privacy policy scrollable native webview
                             onPress={openPrivacyPolicy}
                         >
