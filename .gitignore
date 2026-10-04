@@ -38,6 +38,11 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+.WillieWallet_Stickers/
+frontend/credentials.json
+frontend/credentials/
+frontend/ios/certs/
+
 
 
 
