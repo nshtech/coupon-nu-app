@@ -138,6 +138,26 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         const entitlement = customerInfo.entitlements.active[ENTITLEMENT_ID];
         if (!entitlement) return false;
 
+        // The update listener can hand us CustomerInfo that belongs to someone else
+        // (the previous account, mid sign-out/sign-in). Never unlock or write a
+        // Supabase row for the signed-in user off another user's entitlement.
+        // originalAppUserId alone is not enough: the SDK is configured anonymously,
+        // so a user aliased by logIn() can keep a `$RCAnonymousID:` original ID.
+        // In that case fall back to the identity the SDK is currently logged in as.
+        if (customerInfo.originalAppUserId !== currentUser.id) {
+            let appUserId: string | null = null;
+            try {
+                appUserId = await Purchases.getAppUserID();
+            } catch (err) {
+                console.error('[SubscriptionProvider] getAppUserID failed:', err);
+            }
+
+            if (appUserId !== currentUser.id || userRef.current?.id !== currentUser.id) {
+                console.warn('[SubscriptionProvider] Ignoring entitlement for a different RevenueCat user');
+                return false;
+            }
+        }
+
         stopRedemptionSpinner();
 
         if (isMountedRef.current) {
