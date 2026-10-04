@@ -8,49 +8,19 @@
   },
   "stickers" : [
     {
-      "filename" : "glasses-silly@3x.sticker"
-    },
-    {
-      "filename" : "willie-dollar@3x.sticker"
-    },
-    {
       "filename" : "willie-face@3x.sticker"
-    },
-    {
-      "filename" : "willie-exclamation-eyes@3x.sticker"
     },
     {
       "filename" : "heart-eyes@3x.sticker"
     },
     {
-      "filename" : "willie-standing@3x.sticker"
-    },
-    {
-      "filename" : "one-arm-point@3x.sticker"
-    },
-    {
-      "filename" : "willie-excited-face@3x.sticker"
-    },
-    {
-      "filename" : "laying-down@3x.sticker"
-    },
-    {
-      "filename" : "hacker@3x.sticker"
-    },
-    {
-      "filename" : "boba-silly@3x.sticker"
-    },
-    {
-      "filename" : "music-silly@3x.sticker"
-    },
-    {
-      "filename" : "disappointed@3x.sticker"
-    },
-    {
       "filename" : "willie-money-face@3x.sticker"
     },
     {
-      "filename" : "make-it-rain@3x.sticker"
+      "filename" : "willie-exclamation-eyes@3x.sticker"
+    },
+    {
+      "filename" : "willie-excited-face@3x.sticker"
     },
     {
       "filename" : "willie-happy-face@3x.sticker"
@@ -62,7 +32,37 @@
       "filename" : "arms-up@3x.sticker"
     },
     {
+      "filename" : "willie-standing@3x.sticker"
+    },
+    {
+      "filename" : "one-arm-point@3x.sticker"
+    },
+    {
+      "filename" : "make-it-rain@3x.sticker"
+    },
+    {
+      "filename" : "willie-dollar@3x.sticker"
+    },
+    {
+      "filename" : "boba-silly@3x.sticker"
+    },
+    {
+      "filename" : "glasses-silly@3x.sticker"
+    },
+    {
+      "filename" : "laying-down@3x.sticker"
+    },
+    {
       "filename" : "overwhelmed@3x.sticker"
+    },
+    {
+      "filename" : "disappointed@3x.sticker"
+    },
+    {
+      "filename" : "music-silly@3x.sticker"
+    },
+    {
+      "filename" : "hacker@3x.sticker"
     }
   ]
 }

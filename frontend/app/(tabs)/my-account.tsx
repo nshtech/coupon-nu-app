@@ -1,4 +1,4 @@
-import { TouchableOpacity, Linking, Alert } from 'react-native';
+import { TouchableOpacity, Linking, Alert, Modal } from 'react-native';
 import { BRAND_PURPLE } from '@/constants/Colors';
 import { View, Text } from 'react-native';
 import { Settings, MessageCircleQuestionMark, File, Lock, Trash2, LogOut, Sparkles } from 'lucide-react-native';
@@ -79,13 +79,19 @@ export default function MyAccount() {
     { icon: LogOut, label: 'Log Out', onPress: logout },
   ];
 
-  // the paywall closes itself once the purchase lands and isSubscribed flips
-  if (showPaywall && !isSubscribed) {
-    return <PaywallScreen onClose={() => setShowPaywall(false)} />;
-  }
-
   return (
     <View className="flex-1 bg-brand-cream-soft">
+      {/* full-screen modal so the paywall covers the tab bar like it does elsewhere */}
+      {/* the paywall closes itself once the purchase lands and isSubscribed flips */}
+      <Modal
+        visible={showPaywall && !isSubscribed}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setShowPaywall(false)}
+      >
+        <PaywallScreen onClose={() => setShowPaywall(false)} />
+      </Modal>
+
       {/* profile header */}
       <View className="rounded-b-[28px] bg-brand-purple px-6 pb-7 pt-4">
         {/* eventually this will be fetched from the OAuth session */}
