@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { AccessibilityInfo, Alert } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { supabase } from '@/utils/supabase';
@@ -24,6 +24,7 @@ export function SavedCouponsProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();
     const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
     const [isSavingAvailable, setIsSavingAvailable] = useState<boolean>(true);
+    const pendingIds = useRef<Set<number>>(new Set());
 
     useEffect(() => {
         if (!user) {
@@ -57,6 +58,8 @@ export function SavedCouponsProvider({ children }: { children: ReactNode }) {
         if (!user || !isSavingAvailable) return;
 
         const couponId: number = coupon.coupon_id;
+        // a second tap before the first write lands would act on stale state
+        if (pendingIds.current.has(couponId)) return;
         const wasSaved = savedIds.has(couponId);
         const applyLocally = (saved: boolean) => setSavedIds(prev => {
             const next = new Set(prev);
@@ -71,9 +74,15 @@ export function SavedCouponsProvider({ children }: { children: ReactNode }) {
             : Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
         ).catch(() => {});
 
-        const { error } = wasSaved
-            ? await supabase.from('saved_coupons').delete().eq('user_id', user.id).eq('coupon_id', couponId)
-            : await supabase.from('saved_coupons').insert({ user_id: user.id, coupon_id: couponId });
+        pendingIds.current.add(couponId);
+        let error;
+        try {
+            ({ error } = wasSaved
+                ? await supabase.from('saved_coupons').delete().eq('user_id', user.id).eq('coupon_id', couponId)
+                : await supabase.from('saved_coupons').insert({ user_id: user.id, coupon_id: couponId }));
+        } finally {
+            pendingIds.current.delete(couponId);
+        }
 
         if (error) {
             console.error('Error updating saved coupon:', error);

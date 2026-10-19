@@ -1,6 +1,6 @@
 import { View, Text, Pressable, TouchableOpacity, Alert, Animated, StyleSheet, Easing, PanResponder, ScrollView, ActivityIndicator, AccessibilityInfo, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Check, Heart, X } from 'lucide-react-native';
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -54,6 +54,15 @@ export default function CouponDetail() {
 
   // a used coupon is the cashier's proof, so only Done can dismiss it
   const canDismiss = !isRedeeming && !isActivated;
+
+  // also blocks Android's hardware back; close() sets isClosing before it navigates
+  const navigation = useNavigation();
+  useEffect(() => {
+    if (canDismiss) return;
+    return navigation.addListener('beforeRemove', (e) => {
+      if (!isClosing.current) e.preventDefault();
+    });
+  }, [navigation, canDismiss]);
 
   useEffect(() => {
     Animated.timing(progress, {
@@ -213,6 +222,11 @@ export default function CouponDetail() {
       return;
     }
 
+    if (coupon.usage_limit > 0 && (userCouponToUsages.get(coupon.coupon_id) || 0) >= coupon.usage_limit) {
+      Alert.alert('No uses left', "You've already used this coupon as many times as it allows.");
+      return;
+    }
+
     setIsRedeeming(true);
     const usedAtNow = new Date().toISOString();
 
@@ -311,6 +325,7 @@ export default function CouponDetail() {
     }
 
     const couponUses = userCouponToUsages.get(coupon.coupon_id) || 0;
+    const isUsedUp = coupon.usage_limit > 0 && couponUses >= coupon.usage_limit;
     const usesLabel = coupon.usage_limit === 0
       ? 'Unlimited uses'
       : `${Math.max(0, coupon.usage_limit - couponUses)} of ${coupon.usage_limit} use${coupon.usage_limit === 1 ? '' : 's'} left`;
@@ -370,9 +385,9 @@ export default function CouponDetail() {
         ) : (
           <>
             <PrimaryButton
-              label={isRedeeming ? 'Using coupon...' : 'Use this coupon'}
+              label={isRedeeming ? 'Using coupon...' : isUsedUp ? 'No uses left' : 'Use this coupon'}
               onPress={handleUseCoupon}
-              disabled={isRedeeming}
+              disabled={isRedeeming || isUsedUp}
               loading={isRedeeming}
               className="mt-6"
             />

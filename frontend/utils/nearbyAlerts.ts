@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
@@ -60,10 +61,19 @@ const REGIONS: Location.LocationRegion[] = PLACES.map((place) => ({
 // Students pass the same spots daily, so each one alerts at most once per
 // window. Downtown spots sit a block apart, so a walk down Church St would
 // otherwise fire several in a row; the global gap keeps that to one.
-// TODO: testing only, restore before shipping:
-// PLACE_INTERVAL_MS = 12 * 60 * 60 * 1000, GLOBAL_INTERVAL_MS = 30 * 60 * 1000
-const PLACE_INTERVAL_MS = 0;
-const GLOBAL_INTERVAL_MS = 0;
+const PLACE_INTERVAL_MS = 12 * 60 * 60 * 1000;
+const GLOBAL_INTERVAL_MS = 30 * 60 * 1000;
+
+// Android 13+ only shows the notification permission prompt once a channel exists
+const ANDROID_CHANNEL_ID = 'nearby-deals';
+
+async function ensureAndroidChannel() {
+    if (Platform.OS !== 'android') return;
+    await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
+        name: 'Nearby deals',
+        importance: Notifications.AndroidImportance.DEFAULT,
+    });
+}
 
 export type EnableResult =
     | 'enabled'
@@ -94,6 +104,9 @@ TaskManager.defineTask<{ eventType: Location.GeofencingEventType; region: Locati
         if (!place) return;
 
         try {
+            // the region can outlive the opt-in if stopping geofencing failed
+            if ((await AsyncStorage.getItem(ENABLED_KEY)) !== 'true') return;
+
             const now = Date.now();
             const last = Number(await AsyncStorage.getItem(LAST_NOTIFIED_KEY)) || 0;
             if (now - last < GLOBAL_INTERVAL_MS) return;
@@ -115,7 +128,7 @@ TaskManager.defineTask<{ eventType: Location.GeofencingEventType; region: Locati
                     body: 'Willie has a deal waiting for you. Open the app to save!',
                     data: { placeId: place.id },
                 },
-                trigger: null,
+                trigger: Platform.OS === 'android' ? { channelId: ANDROID_CHANNEL_ID } : null,
             });
         } catch (e) {
             console.error('[nearbyAlerts] failed to notify:', e);
@@ -136,6 +149,7 @@ async function startGeofence() {
 // Walks the user through every permission the alert needs, in order:
 // notifications, then location while in use, then "Always" location.
 export async function enableNearbyAlerts(): Promise<EnableResult> {
+    await ensureAndroidChannel();
     const notifications = await Notifications.requestPermissionsAsync();
     if (!notifications.granted) return 'notifications-denied';
 
@@ -156,6 +170,7 @@ export async function enableNearbyAlerts(): Promise<EnableResult> {
     return 'enabled';
 }
 
+// Throws if geofencing could not be stopped, so callers can tell the user.
 export async function disableNearbyAlerts() {
     try {
         await AsyncStorage.multiRemove([ENABLED_KEY, REGIONS_VERSION_KEY]);
@@ -164,6 +179,7 @@ export async function disableNearbyAlerts() {
         }
     } catch (e) {
         console.error('[nearbyAlerts] could not stop geofencing:', e);
+        throw e;
     }
 }
 

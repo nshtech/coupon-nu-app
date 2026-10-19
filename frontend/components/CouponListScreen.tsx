@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { View, Text, Animated, ActivityIndicator } from 'react-native';
+import { View, Text, Animated, ActivityIndicator, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandLockup } from '@/components/BrandHeader';
 import SearchFilterBar from '@/components/SearchFilterBar';
@@ -86,6 +86,22 @@ export default function CouponListScreen({ headline, coupons, emptyState, search
 
     return (
       <>
+        {loadError ? (
+          // a failed refresh keeps the last list on screen; say so without hiding it
+          <View
+            className="mb-3 flex-row items-center rounded-card border border-brand-tan bg-white px-4 py-3"
+            accessibilityLiveRegion="polite"
+          >
+            <Text className="flex-1 pr-3 font-body text-sm text-brand-ink">{loadError}</Text>
+            <Pressable
+              onPress={handleRefresh}
+              accessibilityRole="button"
+              className="min-h-11 justify-center rounded-full bg-brand-purple px-4 active:opacity-80"
+            >
+              <Text className="font-display-medium text-sm text-brand-cream">Try again</Text>
+            </Pressable>
+          </View>
+        ) : null}
         <View className="mb-3 flex-row items-baseline justify-between">
           <Text className="font-display-medium text-xs uppercase tracking-widest text-brand-purple-soft" accessibilityLiveRegion="polite">
             {isFiltering

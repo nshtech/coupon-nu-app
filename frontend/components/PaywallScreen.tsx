@@ -2,9 +2,10 @@ import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "rea
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Check, X } from 'lucide-react-native';
+import { X } from 'lucide-react-native';
 import { BRAND_CREAM, BRAND_PURPLE, CARD_SHADOW } from "@/constants/Colors";
 import { QUARTER_PASS_DISPLAY_DATE, QUARTER_PASS_NAME } from '@/constants/quarterPass';
+import { PRODUCT_TYPE } from 'react-native-purchases';
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { openPrivacyPolicy, openTermsOfService } from '@/utils/pdfViewer';
@@ -14,11 +15,16 @@ interface PaywallScreenProps {
     onClose?: () => void;
 }
 
-const PERKS = ['Local favorites', 'Easy redemption', 'New discoveries'];
-
 // "Fall 2026 Quarter Pass" → "Fall Quarter Pass", "December 13, 2026" → "December 13"
 const PASS_BADGE = QUARTER_PASS_NAME.replace(/\s\d{4}\b/, '');
 const ACCESS_THROUGH = QUARTER_PASS_DISPLAY_DATE.replace(/,\s*\d{4}$/, '');
+
+const ONE_TIME_PRODUCT_TYPES: string[] = [
+    PRODUCT_TYPE.CONSUMABLE,
+    PRODUCT_TYPE.NON_CONSUMABLE,
+    PRODUCT_TYPE.NON_RENEWABLE_SUBSCRIPTION,
+    PRODUCT_TYPE.PREPAID_SUBSCRIPTION,
+];
 
 export default function PaywallScreen({ onClose }: PaywallScreenProps) {
     const insets = useSafeAreaInsets();
@@ -31,8 +37,17 @@ export default function PaywallScreen({ onClose }: PaywallScreenProps) {
         isPurchasing,
         isRestoring,
         isRedeemingOfferCode,
+        passProduct,
     } = useSubscription();
     const { logout } = useAuth();
+
+    // StoreKit 1 reports UNKNOWN; show no renewal claim rather than a wrong one
+    const isAutoRenewing = passProduct?.productType === PRODUCT_TYPE.AUTO_RENEWABLE_SUBSCRIPTION;
+    const renewalLabel = isAutoRenewing
+        ? 'Renews automatically'
+        : passProduct && ONE_TIME_PRODUCT_TYPES.includes(passProduct.productType)
+            ? 'No subscription'
+            : null;
 
     // one purchase flow at a time — StoreKit queues sheets badly if they overlap
     const isBusy = isPurchasing || isRestoring || isRedeemingOfferCode;
@@ -95,39 +110,31 @@ export default function PaywallScreen({ onClose }: PaywallScreenProps) {
                         <Text className="text-brand-cream">a little more affordable.</Text>
                     </Text>
                     <Text className="mt-3 px-2 text-center font-body text-base leading-6 text-white/75">
-                        Unlock the student deals you'll actually use—all quarter long.
+                        Unlock the student deals you'll actually use{'\n'}all quarter long.
                     </Text>
                 </View>
 
                 <View className="flex-1 px-6 pt-6">
-                    <View className="flex-row gap-3">
-                        {PERKS.map((perk) => (
-                            <View
-                                key={perk}
-                                className="flex-1 items-center rounded-card border border-brand-tan/50 bg-white px-2 py-4"
-                            >
-                                <View className="h-9 w-9 items-center justify-center rounded-full bg-brand-cream">
-                                    <Check size={16} color={BRAND_PURPLE} strokeWidth={3} />
-                                </View>
-                                <Text className="mt-2.5 text-center font-display-medium text-[13px] leading-4 text-brand-ink">
-                                    {perk}
-                                </Text>
-                            </View>
-                        ))}
-                    </View>
-
-                    <View className="mt-4 flex-row items-center rounded-card border border-brand-tan bg-white px-5 py-5">
+                    <View className="flex-row items-center rounded-card border border-brand-tan bg-white px-5 py-5">
                         <View className="flex-1 pr-3">
                             <Text className="font-display text-xs uppercase tracking-widest text-brand-purple-soft">
-                                One-time quarter pass
+                                {isAutoRenewing ? 'Quarter pass' : 'One-time quarter pass'}
                             </Text>
                             <Text className="mt-1.5 font-body text-base text-brand-ink">
                                 Access through {ACCESS_THROUGH}
                             </Text>
                         </View>
                         <View className="items-end">
-                            <Text className="font-display-bold text-4xl leading-[44px] text-brand-purple">$4.99</Text>
-                            <Text className="font-body text-xs text-brand-purple-soft">No subscription</Text>
+                            {passProduct ? (
+                                <Text className="font-display-bold text-4xl leading-[44px] text-brand-purple">
+                                    {passProduct.priceString}
+                                </Text>
+                            ) : (
+                                <ActivityIndicator color={BRAND_PURPLE} />
+                            )}
+                            {renewalLabel ? (
+                                <Text className="font-body text-xs text-brand-purple-soft">{renewalLabel}</Text>
+                            ) : null}
                         </View>
                     </View>
 

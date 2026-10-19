@@ -1,8 +1,24 @@
-"""One-off script: wipe all coupons/coupon_usages and load the new coupon list."""
+"""One-off script: wipe all coupons/coupon_usages and load the new coupon list.
+
+Backs up `coupons` and `coupon_usages` to backups/ first, and asks for
+confirmation unless run with --yes.
+"""
+import argparse
+import json
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+from postgrest.exceptions import APIError
+
 from app.config import supabase
 
 QUARTER = "Fall 2026"
 EXPIRATION = "2026-12-13"
+BACKUP_DIR = Path(__file__).parent / "backups"
+PAGE_SIZE = 1000
+# PostgREST / Postgres codes for "that table does not exist"
+MISSING_TABLE_CODES = {"PGRST205", "42P01"}
 
 COUPONS = [
     ("Moge Tea", "Student Discount 10% off", 0),
@@ -32,9 +48,46 @@ COUPONS = [
     ("Crossroads Trading", "10% off one regular price item — Not available on consignment", 0),
 ]
 
+
+def fetch_all(table):
+    rows = []
+    while True:
+        page = supabase.table(table).select("*").range(len(rows), len(rows) + PAGE_SIZE - 1).execute().data
+        rows.extend(page)
+        if len(page) < PAGE_SIZE:
+            return rows
+
+
+def backup():
+    BACKUP_DIR.mkdir(exist_ok=True)
+    path = BACKUP_DIR / f"coupons-{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}.json"
+    data = {table: fetch_all(table) for table in ("coupons", "coupon_usages")}
+    path.write_text(json.dumps(data, indent=2, default=str))
+    print(f"Backed up {len(data['coupons'])} coupons and {len(data['coupon_usages'])} usages to {path}")
+
+
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--yes", action="store_true", help="skip the confirmation prompt")
+    args = parser.parse_args()
+
+    if not args.yes:
+        answer = input("This deletes ALL coupons, coupon usages and saved coupons. Type 'reset' to continue: ")
+        if answer.strip() != "reset":
+            print("Aborted.")
+            sys.exit(1)
+
+    backup()
+
     supabase.table("coupon_usages").delete().neq("id", 0).execute()
     supabase.table("coupons").delete().neq("coupon_id", 0).execute()
+    # saved_coupons has no foreign key to coupons (a view), so clear the
+    # hearts that now point at deleted ids
+    try:
+        supabase.table("saved_coupons").delete().neq("coupon_id", -1).execute()
+    except APIError as e:
+        if e.code not in MISSING_TABLE_CODES:
+            raise
 
     rows = [
         {

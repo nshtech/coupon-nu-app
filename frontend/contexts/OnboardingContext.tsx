@@ -16,19 +16,24 @@ const OnboardingContext = createContext<OnboardingContextType | undefined>(undef
 export function OnboardingProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();
     const [isVisible, setIsVisible] = useState(false);
-    // guards against re-showing if the metadata write fails this session
-    const [finishedThisSession, setFinishedThisSession] = useState(false);
+    // guards against re-showing if the metadata write fails this session; per
+    // user, so one account finishing does not skip the next account's intro
+    const [finishedUserId, setFinishedUserId] = useState<string | null>(null);
 
     useEffect(() => {
-        if (user && !user.user_metadata?.onboarding_completed_at && !finishedThisSession) {
+        if (!user) {
+            setIsVisible(false);
+            return;
+        }
+        if (!user.user_metadata?.onboarding_completed_at && finishedUserId !== user.id) {
             setIsVisible(true);
         }
     }, [user?.id]);
 
     const finish = async () => {
         setIsVisible(false);
-        if (finishedThisSession || user?.user_metadata?.onboarding_completed_at) return;
-        setFinishedThisSession(true);
+        if (!user || finishedUserId === user.id || user.user_metadata?.onboarding_completed_at) return;
+        setFinishedUserId(user.id);
 
         const { error } = await supabase.auth.updateUser({
             data: { onboarding_completed_at: new Date().toISOString() },

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useRe
 import { Alert, AppState, AppStateStatus, Platform } from 'react-native';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from './AuthContext';
-import Purchases, { CustomerInfo } from 'react-native-purchases';
+import Purchases, { CustomerInfo, PurchasesStoreProduct } from 'react-native-purchases';
 import { QUARTER_PASS_EXPIRATION_DATE } from '@/constants/quarterPass';
 
 const ENTITLEMENT_ID = 'Quarter Coupon Pass';
@@ -35,6 +35,8 @@ interface SubscriptionContextType {
     isRestoring: boolean;
     isRedeemingOfferCode: boolean;
     canRedeemOfferCodes: boolean;
+    // the product subscribe() buys; null until offerings load (or off native)
+    passProduct: PurchasesStoreProduct | null;
     getSubscription: () => Promise<boolean>;
     subscribe: () => Promise<void>;
     restorePurchases: () => Promise<void>;
@@ -60,6 +62,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     const [isPurchasing, setIsPurchasing] = useState<boolean>(false);
     const [isRestoring, setIsRestoring] = useState<boolean>(false);
     const [isRedeemingOfferCode, setIsRedeemingOfferCode] = useState<boolean>(false);
+    const [passProduct, setPassProduct] = useState<PurchasesStoreProduct | null>(null);
 
     const { user } = useAuth();
 
@@ -477,6 +480,20 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         return () => subscription.remove();
     }, []);
 
+    // Same package subscribe() purchases, so the paywall shows its localized price.
+    useEffect(() => {
+        (async () => {
+            if (!(await ensureConfigured())) return;
+            try {
+                const offerings = await Purchases.getOfferings();
+                const product = offerings.current?.availablePackages[0]?.product ?? null;
+                if (isMountedRef.current) setPassProduct(product);
+            } catch (err) {
+                console.error('[SubscriptionProvider] Could not load offerings:', err);
+            }
+        })();
+    }, []);
+
     // Initial load: identify the user to RevenueCat, read Supabase, and fall back to
     // RevenueCat if Supabase has nothing (new device, reinstall, code redeemed elsewhere).
     useEffect(() => {
@@ -529,6 +546,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         isRestoring,
         isRedeemingOfferCode,
         canRedeemOfferCodes: CAN_REDEEM_OFFER_CODES,
+        passProduct,
         getSubscription,
         subscribe,
         restorePurchases,

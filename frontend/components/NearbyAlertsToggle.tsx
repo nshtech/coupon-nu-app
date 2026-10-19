@@ -81,7 +81,11 @@ export default function NearbyAlertsToggle() {
             }
         } catch (e) {
             console.error('Error toggling nearby alerts:', e);
-            setEnabled(false);
+            if (next) {
+                setEnabled(false);
+            } else {
+                Alert.alert("Couldn't turn off nearby alerts", 'Please try again.');
+            }
         } finally {
             busyRef.current = false;
             setBusy(false);
