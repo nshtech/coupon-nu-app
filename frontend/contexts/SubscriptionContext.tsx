@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useRe
 import { Alert, AppState, AppStateStatus, Platform } from 'react-native';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from './AuthContext';
-import Purchases, { CustomerInfo } from 'react-native-purchases';
+import Purchases, { CustomerInfo, PurchasesPackage, PurchasesStoreProduct } from 'react-native-purchases';
 import { QUARTER_PASS_EXPIRATION_DATE } from '@/constants/quarterPass';
 
 const ENTITLEMENT_ID = 'Quarter Coupon Pass';
@@ -35,6 +35,11 @@ interface SubscriptionContextType {
     isRestoring: boolean;
     isRedeemingOfferCode: boolean;
     canRedeemOfferCodes: boolean;
+    // the product subscribe() buys; null until offerings load for the signed-in account
+    passProduct: PurchasesStoreProduct | null;
+    // offerings could not be loaded; reloadPassProduct() retries
+    isPassUnavailable: boolean;
+    reloadPassProduct: () => Promise<void>;
     getSubscription: () => Promise<boolean>;
     subscribe: () => Promise<void>;
     restorePurchases: () => Promise<void>;
@@ -60,6 +65,8 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     const [isPurchasing, setIsPurchasing] = useState<boolean>(false);
     const [isRestoring, setIsRestoring] = useState<boolean>(false);
     const [isRedeemingOfferCode, setIsRedeemingOfferCode] = useState<boolean>(false);
+    const [passPackage, setPassPackage] = useState<PurchasesPackage | null>(null);
+    const [isPassUnavailable, setIsPassUnavailable] = useState<boolean>(false);
 
     const { user } = useAuth();
 
@@ -70,6 +77,8 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     const isMountedRef = useRef(true);
     const isPollingRef = useRef(false);
     const redemptionSpinnerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // bumped per offerings load, so a slow answer for a previous account is dropped
+    const passRequestRef = useRef(0);
 
     useEffect(() => { userRef.current = user; }, [user]);
     useEffect(() => { isSubscribedRef.current = isSubscribed; }, [isSubscribed]);
@@ -213,6 +222,36 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         }
     };
 
+    /**
+     * Loads the package the paywall shows and subscribe() buys. Runs only after
+     * ensureRevenueCatUser, so the offering belongs to the signed-in account.
+     */
+    const loadPassPackage = async (isIdentified: boolean): Promise<void> => {
+        const request = ++passRequestRef.current;
+        setPassPackage(null);
+        setIsPassUnavailable(false);
+
+        let pkg: PurchasesPackage | null = null;
+        if (isIdentified) {
+            try {
+                const offerings = await Purchases.getOfferings();
+                pkg = offerings.current?.availablePackages[0] ?? null;
+            } catch (err) {
+                console.error('[SubscriptionProvider] Could not load offerings:', err);
+            }
+        }
+
+        if (request !== passRequestRef.current || !isMountedRef.current) return;
+        setPassPackage(pkg);
+        setIsPassUnavailable(!pkg);
+    };
+
+    const reloadPassProduct = async (): Promise<void> => {
+        const currentUser = userRef.current;
+        if (!currentUser) return;
+        await loadPassPackage(await ensureRevenueCatUser(currentUser.id));
+    };
+
     const getSubscription = async (): Promise<boolean> => {
         const currentUser = userRef.current;
         if (!currentUser) return false;
@@ -258,19 +297,18 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
             return;
         }
 
+        // buy exactly the package the paywall priced; never one it has not shown
+        const pkg = passPackage;
+        if (!pkg) {
+            console.error('[SubscriptionProvider] No package available');
+            Alert.alert('Unavailable', 'The quarter pass is not available right now. Please try again later.');
+            return;
+        }
+
         setIsPurchasing(true);
         try {
             if (!(await ensureRevenueCatUser(currentUser.id))) {
                 Alert.alert('Something went wrong', 'We could not reach the App Store. Please try again in a moment.');
-                return;
-            }
-
-            const offerings = await Purchases.getOfferings();
-            const pkg = offerings.current?.availablePackages[0];
-
-            if (!pkg) {
-                console.error('[SubscriptionProvider] No package available');
-                Alert.alert('Unavailable', 'The quarter pass is not available right now. Please try again later.');
                 return;
             }
 
@@ -487,8 +525,11 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
             setIsSubscriptionLoading(true);
 
             (async () => {
-                await ensureRevenueCatUser(user.id);
+                const isIdentified = await ensureRevenueCatUser(user.id);
                 if (cancelled) return;
+
+                // the paywall's price, for this account; does not hold up the access check
+                void loadPassPackage(isIdentified);
 
                 const unlocked = await getSubscription();
                 if (cancelled || unlocked) return;
@@ -504,6 +545,9 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
             setSubscriptionExpiration(null);
             setIsSubscriptionLoading(false);
             isSubscribedRef.current = false;
+            passRequestRef.current += 1;
+            setPassPackage(null);
+            setIsPassUnavailable(false);
 
             // Detach the RevenueCat identity so the next sign-in on this device does
             // not inherit the previous user's entitlement.
@@ -529,6 +573,9 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         isRestoring,
         isRedeemingOfferCode,
         canRedeemOfferCodes: CAN_REDEEM_OFFER_CODES,
+        passProduct: passPackage?.product ?? null,
+        isPassUnavailable,
+        reloadPassProduct,
         getSubscription,
         subscribe,
         restorePurchases,

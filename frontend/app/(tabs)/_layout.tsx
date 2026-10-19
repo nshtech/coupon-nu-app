@@ -1,5 +1,6 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 
 import {
   BRAND_CREAM_SOFT,
@@ -7,26 +8,21 @@ import {
   BRAND_PURPLE_SOFT,
   BRAND_TAN,
 } from '@/constants/Colors';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 
-import { TicketCheck, UserRound } from 'lucide-react-native';
+import { Compass, Heart, TicketCheck, UserRound } from 'lucide-react-native';
 
-const headerOptions = {
-  headerTitle: "Willie's Wallet",
-  headerTitleAlign: 'center' as const,
-  headerShadowVisible: false,
-  headerStyle: { backgroundColor: BRAND_PURPLE },
-  headerTitleStyle: {
-    fontFamily: 'Fredoka_700Bold',
-    fontSize: 26,
-    color: '#ffffff',
-  },
-};
-
+// Each tab draws its own BrandHeader, so the navigator header stays hidden.
 export default function TabLayout() {
   return (
     <Tabs
+      // tick only when the tab actually changes, not on a re-tap of the current one
+      screenListeners={({ navigation }) => ({
+        tabPress: () => {
+          if (!navigation.isFocused()) Haptics.selectionAsync().catch(() => {});
+        },
+      })}
       screenOptions={{
+        headerShown: false,
         tabBarActiveTintColor: BRAND_PURPLE,
         tabBarInactiveTintColor: BRAND_PURPLE_SOFT,
         tabBarStyle: {
@@ -35,27 +31,36 @@ export default function TabLayout() {
           borderTopWidth: 1,
         },
         tabBarLabelStyle: {
-          fontFamily: 'Ubuntu_500Medium',
-          fontSize: 12,
+          fontFamily: 'Fredoka_500Medium',
+          fontSize: 11,
         },
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          ...headerOptions,
-          title: 'My Coupons',
-          tabBarIcon: ({ color }) => <TicketCheck size={26} color={color} />,
+          title: 'Discover',
+          tabBarIcon: ({ color }) => <Compass size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="saved"
+        options={{
+          title: 'Saved',
+          tabBarIcon: ({ color }) => <Heart size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="used"
+        options={{
+          title: 'Used',
+          tabBarIcon: ({ color }) => <TicketCheck size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="my-account"
         options={{
-          ...headerOptions,
-          title: 'My Account',
-          tabBarIcon: ({ color }) => <UserRound size={26} color={color} />,
+          title: 'Profile',
+          tabBarIcon: ({ color }) => <UserRound size={24} color={color} />,
         }}
       />
     </Tabs>

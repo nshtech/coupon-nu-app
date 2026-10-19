@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { Alert } from 'react-native';
 import { supabase } from '@/utils/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { deleteAccountAPI } from '../utils/api';
+import { disableNearbyAlerts } from '@/utils/nearbyAlerts';
 
 const ENFORCE_NORTHWESTERN_DOMAIN =
     process.env.EXPO_PUBLIC_ENFORCE_NORTHWESTERN_DOMAIN !== 'false';
@@ -34,6 +36,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
 
     const logout = async () => {
+        // the geofence is per device; don't keep pinging a signed-out phone.
+        // Only a failure to clear the opt-in throws; a stuck geofence stays silent.
+        try {
+            await disableNearbyAlerts();
+        } catch {
+            Alert.alert("Couldn't sign out", 'Nearby deal alerts could not be turned off. Please try again.');
+            return;
+        }
+
         const { error } = await supabase.auth.signOut();
         // note: no need to update is logged in state here, it will be updated in the useEffect listener below
         if (error) {
@@ -55,10 +66,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         try {
             const accessToken = session.access_token;
-        
+
+            // before the delete, so a failure to clear the opt-in aborts while it can
+            // still be retried; a geofence that fails to stop is logged, not thrown
+            await disableNearbyAlerts();
+
             await deleteAccountAPI(accessToken);
             console.log('Account deleted successfully');
-            
+
             await supabase.auth.signOut(); // clears local session to prevent being stuck at paywall
             console.log('Signed out from Supabase');
             

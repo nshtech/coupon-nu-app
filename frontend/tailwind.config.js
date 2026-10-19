@@ -5,19 +5,23 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Willie's Wallet style sheet palette
-        'brand-purple': '#401f68',
+        // Willie's Wallet palette (design rework values)
+        'brand-purple': '#4e2078',
         'brand-purple-mid': '#7b6496',
-        'brand-purple-soft': '#8a7aa2',
-        'brand-cream': '#fae8c5',
-        'brand-cream-soft': '#fdf6e8',
-        'brand-tan': '#d1b582',
+        'brand-purple-soft': '#8b75a1',
+        'brand-cream': '#fceac3',
+        'brand-cream-soft': '#fff8eb',
+        'brand-tan': '#d4b267',
         'brand-peach': '#efc6a4',
-        'brand-ink': '#2b1546',
+        'brand-lavender': '#f1e6f8',
+        'brand-mint': '#e3efe6',
+        'brand-yellow': '#ffd25e',
+        'brand-danger': '#b42318',
+        'brand-ink': '#28173b',
 
         // legacy tokens, repointed onto the brand palette
-        'nu-purple': '#401f68',
-        'purple-80': '#401f68',
+        'nu-purple': '#4e2078',
+        'purple-80': '#4e2078',
         'purple-70': '#523080',
         'purple-60': '#634296',
         'purple-50': '#7b6496',
@@ -30,6 +34,7 @@ module.exports = {
       fontFamily: {
         // display — TT Masters stand-in
         'display': ['Fredoka_600SemiBold'],
+        'display-medium': ['Fredoka_500Medium'],
         'display-bold': ['Fredoka_700Bold'],
         // body — Aileron / Ubuntu
         'body': ['Ubuntu_400Regular'],
@@ -42,7 +47,8 @@ module.exports = {
         'inter-bold': ['Ubuntu_700Bold'],
       },
       borderRadius: {
-        'card': '20px',
+        'card': '24px',
+        'sheet': '32px',
       },
     },
   },
