@@ -38,14 +38,17 @@ export default function PaywallScreen({ onClose }: PaywallScreenProps) {
         isRestoring,
         isRedeemingOfferCode,
         passProduct,
+        isPassUnavailable,
+        reloadPassProduct,
     } = useSubscription();
     const { logout } = useAuth();
 
     // StoreKit 1 reports UNKNOWN; show no renewal claim rather than a wrong one
     const isAutoRenewing = passProduct?.productType === PRODUCT_TYPE.AUTO_RENEWABLE_SUBSCRIPTION;
+    const isOneTime = !!passProduct && ONE_TIME_PRODUCT_TYPES.includes(passProduct.productType);
     const renewalLabel = isAutoRenewing
         ? 'Renews automatically'
-        : passProduct && ONE_TIME_PRODUCT_TYPES.includes(passProduct.productType)
+        : isOneTime
             ? 'No subscription'
             : null;
 
@@ -118,7 +121,7 @@ export default function PaywallScreen({ onClose }: PaywallScreenProps) {
                     <View className="flex-row items-center rounded-card border border-brand-tan bg-white px-5 py-5">
                         <View className="flex-1 pr-3">
                             <Text className="font-display text-xs uppercase tracking-widest text-brand-purple-soft">
-                                {isAutoRenewing ? 'Quarter pass' : 'One-time quarter pass'}
+                                {isOneTime ? 'One-time quarter pass' : 'Quarter pass'}
                             </Text>
                             <Text className="mt-1.5 font-body text-base text-brand-ink">
                                 Access through {ACCESS_THROUGH}
@@ -129,6 +132,16 @@ export default function PaywallScreen({ onClose }: PaywallScreenProps) {
                                 <Text className="font-display-bold text-4xl leading-[44px] text-brand-purple">
                                     {passProduct.priceString}
                                 </Text>
+                            ) : isPassUnavailable ? (
+                                <TouchableOpacity
+                                    onPress={() => reloadPassProduct()}
+                                    className="min-h-11 items-end justify-center"
+                                    accessibilityRole="button"
+                                    accessibilityLabel="Price unavailable. Try again"
+                                >
+                                    <Text className="font-body text-sm text-brand-purple-soft">Price unavailable</Text>
+                                    <Text className="font-display-medium text-base text-brand-purple">Try again</Text>
+                                </TouchableOpacity>
                             ) : (
                                 <ActivityIndicator color={BRAND_PURPLE} />
                             )}
@@ -141,7 +154,7 @@ export default function PaywallScreen({ onClose }: PaywallScreenProps) {
                     <TactileButton
                         label="Get my quarter pass"
                         onPress={() => subscribe()}
-                        disabled={isBusy}
+                        disabled={isBusy || !passProduct}
                         className="mt-6"
                     >
                         {isPurchasing ? <ActivityIndicator color={BRAND_CREAM} /> : undefined}

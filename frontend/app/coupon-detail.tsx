@@ -1,6 +1,7 @@
 import { View, Text, Pressable, TouchableOpacity, Alert, Animated, StyleSheet, Easing, PanResponder, ScrollView, ActivityIndicator, AccessibilityInfo, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
-import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { usePreventRemove } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Check, Heart, X } from 'lucide-react-native';
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -55,14 +56,11 @@ export default function CouponDetail() {
   // a used coupon is the cashier's proof, so only Done can dismiss it
   const canDismiss = !isRedeeming && !isActivated;
 
-  // also blocks Android's hardware back; close() sets isClosing before it navigates
-  const navigation = useNavigation();
-  useEffect(() => {
-    if (canDismiss) return;
-    return navigation.addListener('beforeRemove', (e) => {
-      if (!isClosing.current) e.preventDefault();
-    });
-  }, [navigation, canDismiss]);
+  // also blocks Android's hardware back and iOS's native dismiss (native-stack reads
+  // usePreventRemove, not beforeRemove listeners). close() lifts it once its animation
+  // ends, and navigates only after that render so the guard is already off.
+  const [hasClosed, setHasClosed] = useState<boolean>(false);
+  usePreventRemove(!canDismiss && !hasClosed, () => {});
 
   useEffect(() => {
     Animated.timing(progress, {
@@ -81,8 +79,12 @@ export default function CouponDetail() {
       duration: reduceMotion ? 0 : CLOSE_DURATION_MS,
       easing: Easing.in(Easing.cubic),
       useNativeDriver: true,
-    }).start(() => router.back());
-  }, [progress, reduceMotion, router]);
+    }).start(() => setHasClosed(true));
+  }, [progress, reduceMotion]);
+
+  useEffect(() => {
+    if (hasClosed) router.back();
+  }, [hasClosed]);
 
   // the responder is created once, so it reads the latest close/canDismiss through a ref
   const closeRef = useRef(() => {});

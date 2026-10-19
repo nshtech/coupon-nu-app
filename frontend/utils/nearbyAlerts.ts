@@ -122,6 +122,8 @@ TaskManager.defineTask<{ eventType: Location.GeofencingEventType; region: Locati
                 [PLACE_NOTIFIED_KEY, JSON.stringify(perPlace)],
             ]);
 
+            // a background launch may run before anything else created the channel
+            await ensureAndroidChannel();
             await Notifications.scheduleNotificationAsync({
                 content: {
                     title: `Deal nearby: ${place.name} 🐾`,
@@ -170,16 +172,23 @@ export async function enableNearbyAlerts(): Promise<EnableResult> {
     return 'enabled';
 }
 
-// Throws if geofencing could not be stopped, so callers can tell the user.
+// Throws if the opt-in flag could not be removed, so callers can tell the user.
+// A failure to stop geofencing is only logged: with the flag gone, the task
+// ignores any region that is still being monitored.
 export async function disableNearbyAlerts() {
     try {
         await AsyncStorage.multiRemove([ENABLED_KEY, REGIONS_VERSION_KEY]);
+    } catch (e) {
+        console.error('[nearbyAlerts] could not clear the opt-in:', e);
+        throw e;
+    }
+
+    try {
         if (await Location.hasStartedGeofencingAsync(GEOFENCE_TASK)) {
             await Location.stopGeofencingAsync(GEOFENCE_TASK);
         }
     } catch (e) {
         console.error('[nearbyAlerts] could not stop geofencing:', e);
-        throw e;
     }
 }
 

@@ -36,7 +36,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
 
     const logout = async () => {
-        // the geofence is per device; don't keep pinging a signed-out phone
+        // the geofence is per device; don't keep pinging a signed-out phone.
+        // Only a failure to clear the opt-in throws; a stuck geofence stays silent.
         try {
             await disableNearbyAlerts();
         } catch {
@@ -66,7 +67,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         try {
             const accessToken = session.access_token;
 
-            // before the delete, so a failure here aborts while it can still be retried
+            // before the delete, so a failure to clear the opt-in aborts while it can
+            // still be retried; a geofence that fails to stop is logged, not thrown
             await disableNearbyAlerts();
 
             await deleteAccountAPI(accessToken);
