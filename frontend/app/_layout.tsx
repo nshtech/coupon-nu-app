@@ -17,6 +17,7 @@ import {
   Ubuntu_700Bold,
 } from '@expo-google-fonts/ubuntu';
 import {
+  Fredoka_500Medium,
   Fredoka_600SemiBold,
   Fredoka_700Bold,
 } from '@expo-google-fonts/fredoka';
@@ -26,6 +27,9 @@ import { BRAND_CREAM_SOFT, BRAND_INK, BRAND_PURPLE, BRAND_TAN } from '@/constant
 
 import "./../global.css"
 import { UsageProvider } from '@/contexts/UsageContext';
+import { CouponsProvider } from '@/contexts/CouponsContext';
+import { SavedCouponsProvider } from '@/contexts/SavedCouponsContext';
+import { OnboardingProvider } from '@/contexts/OnboardingContext';
 
 import ConfigureRevenueCat from '@/utils/RevenueCat.js';
 
@@ -51,6 +55,7 @@ export default function RootLayout() {
     Ubuntu_500Medium,
     Ubuntu_700Bold,
     // display — TT Masters stand-in
+    Fredoka_500Medium,
     Fredoka_600SemiBold,
     Fredoka_700Bold,
     ...FontAwesome.font,
@@ -77,8 +82,12 @@ export default function RootLayout() {
     <AuthProvider>
       <SubscriptionProvider>
         <UsageProvider>
-          <ConfigureRevenueCat />
-          <RootLayoutContent />
+          <CouponsProvider>
+            <SavedCouponsProvider>
+              <ConfigureRevenueCat />
+              <RootLayoutContent />
+            </SavedCouponsProvider>
+          </CouponsProvider>
         </UsageProvider>
       </SubscriptionProvider>
     </AuthProvider>
@@ -121,15 +130,27 @@ function RootLayoutNav() {
 
   return (
       <ThemeProvider value={BRAND_THEME}>
-        <StatusBar style="dark" />
-        <Stack
-          initialRouteName="(tabs)"
-          screenOptions={{ contentStyle: { backgroundColor: BRAND_CREAM_SOFT } }}
-        >
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="coupon-detail" options={{ headerShown: false }} />
-          {/* <Stack.Screen name="modal" options={{ presentation: 'modal' }} /> */}
-        </Stack>
+        <OnboardingProvider>
+          {/* light text over the purple tab headers */}
+          <StatusBar style="light" />
+          <Stack
+            initialRouteName="(tabs)"
+            screenOptions={{ contentStyle: { backgroundColor: BRAND_CREAM_SOFT } }}
+          >
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            {/* bottom sheet over the tabs; coupon-detail.tsx animates itself */}
+            <Stack.Screen
+              name="coupon-detail"
+              options={{
+                headerShown: false,
+                presentation: 'transparentModal',
+                animation: 'none',
+                contentStyle: { backgroundColor: 'transparent' },
+              }}
+            />
+            {/* <Stack.Screen name="modal" options={{ presentation: 'modal' }} /> */}
+          </Stack>
+        </OnboardingProvider>
       </ThemeProvider>
   );
 }

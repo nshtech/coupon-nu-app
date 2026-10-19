@@ -18,7 +18,8 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.studentholdings.willieswallet"
+      "bundleIdentifier": "com.studentholdings.willieswallet",
+      "appleTeamId": "X9WWH4VD28"
     },
     "android": {
       "adaptiveIcon": {
@@ -26,7 +27,14 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.studentholdings.willieswallet"
+      "package": "com.studentholdings.willieswallet",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -37,7 +45,17 @@
       "expo-router",
       "expo-asset",
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Willie uses your location to let you know when you are near a spot with a deal.",
+          "locationAlwaysAndWhenInUsePermission": "Allow location Always so Willie can give you a heads-up when you walk past a spot with a deal, even when the app is closed. Your location never leaves your phone.",
+          "locationAlwaysPermission": "Allow location Always so Willie can give you a heads-up when you walk past a spot with a deal, even when the app is closed. Your location never leaves your phone.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

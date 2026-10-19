@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { supabase } from '@/utils/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { deleteAccountAPI } from '../utils/api';
+import { disableNearbyAlerts } from '@/utils/nearbyAlerts';
 
 const ENFORCE_NORTHWESTERN_DOMAIN =
     process.env.EXPO_PUBLIC_ENFORCE_NORTHWESTERN_DOMAIN !== 'false';
@@ -41,6 +42,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
             return;
         }
 
+        // the geofence is per device; don't keep pinging a signed-out phone
+        disableNearbyAlerts();
+
         setSession(null);
         setUser(null);
         setIsNorthwesternUser(false);
@@ -59,6 +63,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             await deleteAccountAPI(accessToken);
             console.log('Account deleted successfully');
             
+            disableNearbyAlerts();
             await supabase.auth.signOut(); // clears local session to prevent being stuck at paywall
             console.log('Signed out from Supabase');
             
