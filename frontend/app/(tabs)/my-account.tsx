@@ -1,6 +1,7 @@
 import { TouchableOpacity, Linking, Alert, Modal, ScrollView } from 'react-native';
 import { BRAND_DANGER, BRAND_PURPLE, CARD_SHADOW } from '@/constants/Colors';
-import { View, Text, Image } from 'react-native';
+import { View, Text } from 'react-native';
+import { Image } from 'expo-image';
 import { Settings, MessageCircleQuestionMark, File, Lock, Trash2, LogOut, Sparkles, ChevronRight, Cat } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -135,7 +136,7 @@ export default function MyAccount() {
             <Image
               source={require('@/assets/images/willie/arms-up.png')}
               style={{ width: 96, height: 96, marginLeft: 8 }}
-              resizeMode="contain"
+              contentFit="contain"
               accessible={false}
             />
           </View>

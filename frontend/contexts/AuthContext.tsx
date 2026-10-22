@@ -10,6 +10,8 @@ const ENFORCE_NORTHWESTERN_DOMAIN =
 
 interface AuthContextType {
     isLoggedIn: boolean;
+    // true until the stored session has been read, so the app can wait instead of flashing the login screen
+    isAuthLoading: boolean;
     isNorthwesternUser: boolean;
     session: Session | null;
     user: User | null;
@@ -28,6 +30,7 @@ interface AuthProviderProps {
 // wraps parts of the app that need access to logged in state (the root)
 export function AuthProvider({ children }: AuthProviderProps) {
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+    const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
     const [isNorthwesternUser, setIsNorthwesternUser] = useState<boolean>(false);
     const [session, setSession] = useState<Session | null>(null);
     const [user, setUser] = useState<User | null>(null);
@@ -113,7 +116,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 setUser(null);
                 setIsNorthwesternUser(false);
             }
-        });
+        }).finally(() => setIsAuthLoading(false));
 
         // listen for session changes
         const { data: listener } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
@@ -140,6 +143,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // what is accessible to the children
     const contextValue: AuthContextType = {
         isLoggedIn,
+        isAuthLoading,
         isNorthwesternUser,
         session,
         user,

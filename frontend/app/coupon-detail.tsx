@@ -23,6 +23,9 @@ const BLURHASH = '|rF?hV%2WCj[ayj[a|j[az_3fQjZa|j[azf6fQfQfQIpWBj[ayj[a|fQayWCoe
 
 // how long a used coupon stays valid on screen for the cashier
 const REDEMPTION_WINDOW_MS = 2 * 60 * 1000;
+// unlimited coupons can be redeemed once per this long; must match COOLDOWN in
+// guard_coupon_usage() (backend/sql/005_lock_down_access.sql)
+const UNLIMITED_COOLDOWN_LABEL = '1 hour';
 const OPEN_DURATION_MS = 280;
 const CLOSE_DURATION_MS = 220;
 const DRAG_CLOSE_DISTANCE = 120;
@@ -210,9 +213,39 @@ export default function CouponDetail() {
     }
   };
 
+  // maps the codes raised by guard_coupon_usage() (005_lock_down_access.sql) to copy
+  const redemptionErrorCopy = (code: string, details: string | null, sqlState: string): [string, string] => {
+    switch (code) {
+      case 'usage_limit_reached':
+        return ['No uses left', "You've already used this coupon as many times as it allows."];
+      case 'coupon_cooldown': {
+        const minutes = Number(details) || 0;
+        const hours = Math.floor(minutes / 60);
+        const wait = hours > 0 ? `${hours}h ${minutes % 60}m` : `${minutes}m`;
+        return ['Used recently', `You can use this coupon again in ${wait}.`];
+      }
+      case 'daily_limit_reached':
+        return ['Daily limit reached', "You've redeemed the most deals allowed in a day. Try again tomorrow."];
+      case 'coupon_expired':
+        return ['Coupon expired', 'This deal is no longer available.'];
+      case 'coupon_not_found':
+        return ['Coupon unavailable', 'This deal was removed.'];
+    }
+    // RLS refusal: no active pass (006_require_pass_for_usage.sql)
+    if (sqlState === '42501') {
+      // reopening the app re-checks RevenueCat, which re-syncs a pass bought on an older app version
+      return ['Pass not active', "Your quarter pass isn't active. If you bought one, close and reopen the app, then try again."];
+    }
+    return ["Couldn't use this coupon", 'Nothing was redeemed. Check your connection and that your pass is active, then try again.'];
+  };
+
   const handleUseCoupon = async () => {
 
-    Alert.alert('Use Coupon', 'Are you sure you want to use this coupon? This action cannot be undone.', [
+    const message = coupon.usage_limit === 0
+      ? `Only use this at the register. After you use it, you'll have to wait ${UNLIMITED_COOLDOWN_LABEL} before you can use it again.`
+      : 'Are you sure you want to use this coupon? This action cannot be undone.';
+
+    Alert.alert('Use Coupon', message, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Use', onPress: () => useCoupon() }
     ]);
@@ -230,26 +263,26 @@ export default function CouponDetail() {
     }
 
     setIsRedeeming(true);
-    const usedAtNow = new Date().toISOString();
 
-    const { error } = await supabase
+    // the database sets used_at and enforces the redemption rules (005_lock_down_access.sql)
+    const { data, error } = await supabase
     .from('coupon_usages')
     .insert({
       user_id: user?.id,
       coupon_id: coupon.coupon_id,
-      used_at: usedAtNow,
-    });
+    })
+    .select('used_at')
+    .single();
 
     setIsRedeeming(false);
 
     if (error) {
       console.error('Error using coupon:', error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
-      Alert.alert(
-        "Couldn't use this coupon",
-        'Nothing was redeemed. Check your connection and that your pass is active, then try again.'
-      );
+      const [title, message] = redemptionErrorCopy(error.message, error.details, error.code);
+      Alert.alert(title, message);
     } else {
+      const usedAtNow = data?.used_at ?? new Date().toISOString();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       setIsActivated(true);
       setNewExpirationDate(new Date(Date.now() + REDEMPTION_WINDOW_MS).toISOString());
@@ -329,7 +362,7 @@ export default function CouponDetail() {
     const couponUses = userCouponToUsages.get(coupon.coupon_id) || 0;
     const isUsedUp = coupon.usage_limit > 0 && couponUses >= coupon.usage_limit;
     const usesLabel = coupon.usage_limit === 0
-      ? 'Unlimited uses'
+      ? 'Unlimited, once an hour'
       : `${Math.max(0, coupon.usage_limit - couponUses)} of ${coupon.usage_limit} use${coupon.usage_limit === 1 ? '' : 's'} left`;
 
     return (
@@ -396,6 +429,7 @@ export default function CouponDetail() {
             <Text className="mt-3 text-center font-body-bold text-sm leading-5 text-brand-purple-soft">
               {/* non-breaking space keeps "2 minutes" together on one line */}
               Only tap this at the register. Once used, the coupon stays valid for 2{'\u00A0'}minutes — show it to the cashier.
+              {coupon.usage_limit === 0 ? ` Then you'll have to wait ${UNLIMITED_COOLDOWN_LABEL.replace(' ', '\u00A0')} to use it again.` : ''}
             </Text>
           </>
         )}

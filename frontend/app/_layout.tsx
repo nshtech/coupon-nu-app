@@ -68,12 +68,6 @@ export default function RootLayout() {
     if (error) throw error;
   }, [error]);
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
   if (!loaded) {
     return null;
   }
@@ -96,7 +90,21 @@ export default function RootLayout() {
 
 function RootLayoutContent() {
 
-  const { isLoggedIn, isNorthwesternUser } = useAuth();
+  const { isLoggedIn, isAuthLoading, isNorthwesternUser } = useAuth();
+
+  // fonts are loaded by the time this mounts; keep the splash up until the
+  // stored session is read too
+  useEffect(() => {
+    if (!isAuthLoading) {
+      SplashScreen.hideAsync();
+    }
+  }, [isAuthLoading]);
+
+  // a signed-in user would otherwise see the login screen for a frame on every
+  // cold start, and its image view can get reused by the Discover header logo
+  if (isAuthLoading) {
+    return null;
+  }
 
    // return the login screen before rending the paywall
    if (!isLoggedIn) {

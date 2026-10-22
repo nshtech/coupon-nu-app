@@ -1,16 +1,20 @@
 import { ReactNode } from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Text } from 'react-native';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Compact purple header shared by every tab: white logo lockup, an optional
 // right-side slot, and a page-specific headline (or custom children).
+// The logo uses expo-image, not React Native's Image: on iOS 26 builds the new
+// architecture can reuse the login screen's native image view for the first
+// tab's header and keep showing the login artwork.
 
 export function BrandLockup() {
   return (
     <Image
       source={require('@/assets/images/logo-white.png')}
       style={{ width: 88, height: 46 }}
-      resizeMode="contain"
+      contentFit="contain"
       accessible
       accessibilityLabel="Willie's Wallet"
     />
