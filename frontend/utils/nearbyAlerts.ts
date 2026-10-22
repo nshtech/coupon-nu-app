@@ -22,7 +22,7 @@ const REGIONS_VERSION_KEY = 'nearbyAlerts.regionsVersion';
 
 // Bump whenever PLACES changes so installs that already monitor the old list
 // re-register (see startGeofence).
-const REGIONS_VERSION = 'places-v1';
+const REGIONS_VERSION = 'places-v2';
 
 const RADIUS_M = 150;
 
@@ -30,6 +30,7 @@ const RADIUS_M = 150;
 // other share one region, since their 150 m circles would fire together.
 const PLACES: { id: string; name: string; latitude: number; longitude: number }[] = [
     { id: 'animal-records', name: 'Animal Records', latitude: 42.0451751, longitude: -87.6812705 },
+    { id: 'chengdu-bistro', name: 'Chengdu Bistro', latitude: 42.0477928, longitude: -87.6807395 },
     { id: 'club-pilates', name: 'Club Pilates Evanston', latitude: 42.03173, longitude: -87.6787585 },
     { id: 'crave-cookies', name: 'Crave Cookies', latitude: 42.0485723, longitude: -87.6824842 },
     { id: 'curts-cafe', name: 'Curt’s Café', latitude: 42.064254, longitude: -87.715658 },
