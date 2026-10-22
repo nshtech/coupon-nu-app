@@ -26,6 +26,7 @@ export const USAGE_OPTIONS: { key: UsageFilter; label: string }[] = [
 // vendor name (compared without case, punctuation or accents) → place type.
 // Vendors missing here have no place type: they show when no type is picked.
 const VENDOR_PLACE_TYPES = new Map<string, PlaceType>([
+  ['chengdubistro', 'food'],
   ['curtscafe', 'food'],
   ['devildawgsevanston', 'food'],
   ['evanstoncornerbistro', 'food'],
@@ -46,6 +47,7 @@ const VENDOR_PLACE_TYPES = new Map<string, PlaceType>([
   ['animalrecords', 'shopping'],
   ['gatherconsciouslycurated', 'shopping'],
   ['lockchicago', 'fun'],
+  ['zorasplace', 'fun'],
 ]);
 
 const normalizeVendor = (vendor: string) =>
