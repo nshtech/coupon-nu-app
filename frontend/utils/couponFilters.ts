@@ -1,8 +1,9 @@
 // Search and filter state shared by the Discover and Saved tabs.
 //
-// The `coupons` table has no category column, so a coupon's place type comes
-// from the vendor name (see VENDOR_PLACE_TYPES). If a `category` column is
-// added later and holds one of the place type keys, it wins over the map.
+// A coupon's place type is its `category` column, edited in the Supabase
+// dashboard (backend/sql/007_coupon_category.sql). The keys below must match the
+// values of the `coupon_category` enum there; a coupon with no category, or one
+// this build does not know, shows when no type is picked.
 
 export type UsageFilter = 'all' | 'unlimited' | 'limited';
 
@@ -23,43 +24,12 @@ export const USAGE_OPTIONS: { key: UsageFilter; label: string }[] = [
   { key: 'limited', label: 'Limited use' },
 ];
 
-// vendor name (compared without case, punctuation or accents) → place type.
-// Vendors missing here have no place type: they show when no type is picked.
-const VENDOR_PLACE_TYPES = new Map<string, PlaceType>([
-  ['chengdubistro', 'food'],
-  ['curtscafe', 'food'],
-  ['devildawgsevanston', 'food'],
-  ['evanstoncornerbistro', 'food'],
-  ['fridasevanston', 'food'],
-  ['lacocinita', 'food'],
-  ['landlakecafe', 'food'],
-  ['mteverestrestaurant', 'food'],
-  ['ovofritocafe', 'food'],
-  ['papajohnspizza', 'food'],
-  ['yofresh', 'food'],
-  ['cravecookies', 'coffee'],
-  ['mogetea', 'coffee'],
-  ['reprisecoffeeroasters', 'coffee'],
-  ['clubpilatesevanston', 'fitness'],
-  ['pilatesconnectionchicago', 'fitness'],
-  ['titleboxingevanston', 'fitness'],
-  ['evanails', 'beauty'],
-  ['animalrecords', 'shopping'],
-  ['gatherconsciouslycurated', 'shopping'],
-  ['lockchicago', 'fun'],
-  ['zorasplace', 'fun'],
-]);
-
-const normalizeVendor = (vendor: string) =>
-  vendor.normalize('NFD').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-
 const isPlaceType = (value: unknown): value is PlaceType =>
   PLACE_TYPES.some(type => type.key === value);
 
 export const getPlaceType = (coupon: any): PlaceType | null => {
   const category = typeof coupon?.category === 'string' ? coupon.category.trim().toLowerCase() : '';
-  if (isPlaceType(category)) return category;
-  return typeof coupon?.vendor === 'string' ? VENDOR_PLACE_TYPES.get(normalizeVendor(coupon.vendor)) ?? null : null;
+  return isPlaceType(category) ? category : null;
 };
 
 export const getPlaceTypeLabel = (coupon: any): string | null => {
