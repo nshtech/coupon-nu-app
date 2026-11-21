@@ -1,13 +1,16 @@
-import { useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
-import { Image } from 'expo-image';
+import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { BRAND_PURPLE_SOFT, CARD_SHADOW } from '@/constants/Colors';
-import { logoZoomStyle } from '@/utils/couponImages';
+import { BRAND_INK, BRAND_MUTED, OUTLINE, RADIUS, SHADOW, WHITE } from '@/constants/Colors';
+import { dealCopy } from '@/utils/dealCopy';
+import { RaisedPressable } from '@/components/ui/Raised';
+import Display from '@/components/ui/Display';
+import Icon from '@/components/ui/Icon';
+import LogoBadge from '@/components/ui/LogoBadge';
 
-// Compact row for the Used tab. Opens the same read-only usage receipt the
-// coupon sheet shows for redeemed coupons.
+// Row for the Used tab. Opens the same read-only usage receipt the coupon sheet
+// shows for redeemed coupons. A coupon that can be used again is a raised card
+// with a chevron; a used-up one goes flat: dashed outline, no shadow, grey
+// logo, "Used up" in muted text.
 
 type CouponHistoryCardProps = {
   coupon: any;
@@ -25,60 +28,71 @@ const formatUsedDate = (dateString: string) => {
 
 export default function CouponHistoryCard({ coupon, lastUsedAt, timesUsed, isExpired }: CouponHistoryCardProps) {
   const router = useRouter();
-  const [imageFailed, setImageFailed] = useState(false);
+  const copy = dealCopy(coupon);
 
-  const usageLine = coupon.usage_limit === 0
-    ? `Used ${timesUsed} time${timesUsed === 1 ? '' : 's'}`
+  const usageCount = coupon.usage_limit === 0
+    ? `${timesUsed} time${timesUsed === 1 ? '' : 's'}`
     : `${timesUsed} of ${coupon.usage_limit} use${coupon.usage_limit === 1 ? '' : 's'}`;
+  const whenLine = isExpired
+    ? `Used ${formatUsedDate(lastUsedAt)}`
+    : `Last used ${formatUsedDate(lastUsedAt)} · ${usageCount}`;
 
   const openReceipt = () => {
     router.push({
       pathname: '/coupon-detail',
-      params: { coupon: JSON.stringify(coupon), usedAt: lastUsedAt },
+      params: { couponId: String(coupon.coupon_id), usedAt: lastUsedAt },
     });
   };
 
   return (
-    <Pressable
+    <RaisedPressable
       onPress={openReceipt}
       accessibilityRole="button"
-      accessibilityLabel={`${coupon.vendor}, ${coupon.offer}. Last used ${formatUsedDate(lastUsedAt)}. ${usageLine}.${isExpired ? ' Redeemed.' : ''}`}
-      className="flex-row items-center rounded-2xl border border-brand-tan bg-white p-3 active:opacity-80"
-      style={CARD_SHADOW}
+      accessibilityLabel={`${coupon.vendor}, ${coupon.offer}. ${whenLine}.${isExpired ? ' Used up.' : ''}`}
+      accessibilityHint="Shows when you used it"
+      radius={RADIUS.card}
+      shadow={!isExpired}
+      style={{ marginRight: SHADOW, marginBottom: SHADOW }}
+      faceStyle={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingLeft: 12,
+        paddingRight: 14,
+        borderRadius: RADIUS.card,
+        borderWidth: OUTLINE,
+        borderColor: BRAND_INK,
+        borderStyle: isExpired ? 'dashed' : 'solid',
+        backgroundColor: isExpired ? 'transparent' : WHITE,
+      }}
     >
-      <View className={`h-14 w-14 items-center justify-center overflow-hidden rounded-xl bg-brand-cream ${isExpired ? 'opacity-50' : ''}`}>
-        {coupon.image_url && !imageFailed ? (
-          <Image
-            source={{ uri: coupon.image_url }}
-            contentFit="cover"
-            onError={() => setImageFailed(true)}
-            style={{ width: '100%', height: '100%', ...logoZoomStyle(coupon.vendor) }}
-          />
-        ) : (
-          <Ionicons name="pricetag-outline" size={22} color={BRAND_PURPLE_SOFT} />
-        )}
-      </View>
+      <LogoBadge coupon={coupon} size={60} radius={14} padding={5} spent={isExpired} />
 
-      <View className="ml-3 flex-1">
-        <Text
-          numberOfLines={1}
-          className={`font-display text-base ${isExpired ? 'text-brand-purple-soft' : 'text-brand-purple'}`}
-        >
-          {coupon.vendor}
-        </Text>
-        <Text numberOfLines={1} className={`font-body text-sm ${isExpired ? 'text-brand-purple-soft' : 'text-brand-ink'}`}>
-          {coupon.offer}
-        </Text>
-        <Text className="mt-1 font-body-medium text-xs text-brand-purple-soft">
-          Used {formatUsedDate(lastUsedAt)} · {usageLine}
+      <View style={{ flex: 1, minWidth: 0, marginLeft: 12, marginRight: 8 }}>
+        {copy.business ? (
+          <Text numberOfLines={1} style={{ fontFamily: 'Figtree_700Bold', fontSize: 15, color: BRAND_MUTED }}>
+            {copy.business}
+          </Text>
+        ) : null}
+        <Display size={22} numberOfLines={2} color={isExpired ? BRAND_MUTED : BRAND_INK} style={{ marginTop: copy.business ? 2 : 0 }}>
+          {copy.headline}
+        </Display>
+        {/* without a short offer headline, the offer sentence tells deals from one business apart */}
+        {!copy.business && copy.description ? (
+          <Text numberOfLines={1} style={{ marginTop: 2, fontFamily: 'Figtree_400Regular', fontSize: 14, color: BRAND_MUTED }}>
+            {copy.description}
+          </Text>
+        ) : null}
+        <Text numberOfLines={1} style={{ marginTop: 3, fontFamily: 'Figtree_600SemiBold', fontSize: 13, color: BRAND_MUTED }}>
+          {whenLine}
         </Text>
       </View>
 
       {isExpired ? (
-        <View className="ml-2 rounded-full bg-brand-cream-soft px-2.5 py-1">
-          <Text className="font-display-medium text-xs text-brand-purple-soft">Redeemed</Text>
-        </View>
-      ) : null}
-    </Pressable>
+        <Text style={{ fontFamily: 'Figtree_700Bold', fontSize: 14, color: BRAND_MUTED }}>Used up</Text>
+      ) : (
+        <Icon name="chevronRight" size={22} color={BRAND_INK} strokeWidth={2.5} />
+      )}
+    </RaisedPressable>
   );
 }

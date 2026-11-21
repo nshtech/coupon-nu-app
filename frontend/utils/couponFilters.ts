@@ -7,11 +7,15 @@
 
 export type UsageFilter = 'all' | 'unlimited' | 'limited';
 
-export type PlaceType = 'food' | 'coffee' | 'fitness' | 'beauty' | 'shopping' | 'fun';
+export type PlaceType = 'food' | 'coffee' | 'treats' | 'fitness' | 'beauty' | 'shopping' | 'fun';
 
+// 'treats' needs `alter type coupon_category add value 'treats'` in Supabase;
+// until a coupon is tagged with it, its chip stays hidden (only types that occur
+// in the list get a chip).
 export const PLACE_TYPES: { key: PlaceType; label: string }[] = [
   { key: 'food', label: 'Food' },
-  { key: 'coffee', label: 'Coffee & treats' },
+  { key: 'coffee', label: 'Coffee' },
+  { key: 'treats', label: 'Treats' },
   { key: 'fitness', label: 'Fitness' },
   { key: 'beauty', label: 'Beauty' },
   { key: 'shopping', label: 'Shopping' },

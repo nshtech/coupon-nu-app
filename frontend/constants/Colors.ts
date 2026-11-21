@@ -1,67 +1,49 @@
-// Willie's Wallet palette (design rework values)
-export const BRAND_PURPLE = '#4e2078';
-export const BRAND_PURPLE_MID = '#7b6496';
-export const BRAND_PURPLE_SOFT = '#8b75a1';
-export const BRAND_CREAM = '#fceac3';
-export const BRAND_CREAM_SOFT = '#fff8eb';
-export const BRAND_TAN = '#d4b267';
-export const BRAND_PEACH = '#efc6a4';
-export const BRAND_MINT = '#e3efe6';
-export const BRAND_YELLOW = '#ffd25e';
-export const BRAND_INK = '#28173b';
-export const BRAND_DANGER = '#b42318';
+// Willie's Wallet design tokens, mirrored from tailwind.config.js.
+export const BRAND_CREAM = '#FFF7EA';
+export const BRAND_INK = '#22103D';
+export const BRAND_PURPLE = '#401F68';
+export const BRAND_PURPLE_MID = '#5A3888';
+export const BRAND_YELLOW = '#FFC93C';
+export const BRAND_YELLOW_SOFT = '#FFE9A8';
+export const BRAND_GREEN = '#1F7A45';
+export const BRAND_LILAC = '#E9E2F4';
+export const BRAND_LILAC_TEXT = '#EDE4F7';
+export const BRAND_MUTED = '#4A3A63';
+export const BRAND_WILLIE = '#8C78A4';
+// the fluffy tufts on Willie's cheeks and tail tip, and their shading
+export const BRAND_WILLIE_FLUFF = '#FAE8C5';
+export const BRAND_WILLIE_FLUFF_SHADE = '#ECC8A6';
+export const BRAND_HEART = '#D42C6F';
+export const BRAND_DANGER = '#B42318';
+export const WHITE = '#FFFFFF';
 
-// legacy names, repointed onto the brand palette
-export const NU_PURPLE = BRAND_PURPLE;
-export const PURPLE_80 = BRAND_PURPLE;
-export const PURPLE_70 = '#523080';
-export const PURPLE_60 = '#634296';
-export const PURPLE_50 = BRAND_PURPLE_MID;
-export const PURPLE_40 = BRAND_PURPLE_SOFT;
-export const PURPLE_30 = '#a496b5';
-export const PURPLE_20 = '#c4b9cf';
+// Every card, button, chip, input, badge and photo gets a 2px ink outline.
+export const OUTLINE = 2;
 
-// warm, purple-tinted lift for cards and sheets
-export const CARD_SHADOW = {
-  shadowColor: BRAND_PURPLE,
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.08,
-  shadowRadius: 12,
-  elevation: 2,
-};
+// Hard offset shadows, no blur. A shadow means "you can tap this".
+export const SHADOW = 4;
+export const SHADOW_SM = 3;
 
-export const DARK_GRAY = '#6f6379';
-export const LIGHT_GRAY = '#e7ddcb';
+export const RADIUS = {
+  card: 22,
+  panel: 28,
+  sheet: 30,
+  badge: 12,
+} as const;
 
 export default {
   light: {
     text: BRAND_INK,
-    background: BRAND_CREAM_SOFT,
+    background: BRAND_CREAM,
     tint: BRAND_PURPLE,
-    tabIconDefault: BRAND_PURPLE_SOFT,
-    tabIconSelected: BRAND_PURPLE,
+    tabIconDefault: BRAND_MUTED,
+    tabIconSelected: BRAND_INK,
   },
   dark: {
-    text: '#fff',
-    background: BRAND_PURPLE,
-    tint: BRAND_CREAM,
-    tabIconDefault: BRAND_PURPLE_SOFT,
-    tabIconSelected: BRAND_CREAM,
+    text: BRAND_INK,
+    background: BRAND_CREAM,
+    tint: BRAND_PURPLE,
+    tabIconDefault: BRAND_MUTED,
+    tabIconSelected: BRAND_INK,
   },
-  BRAND_PURPLE,
-  BRAND_PURPLE_MID,
-  BRAND_PURPLE_SOFT,
-  BRAND_CREAM,
-  BRAND_CREAM_SOFT,
-  BRAND_TAN,
-  BRAND_PEACH,
-  BRAND_INK,
-  NU_PURPLE,
-  PURPLE_80,
-  PURPLE_70,
-  PURPLE_60,
-  PURPLE_50,
-  PURPLE_40,
-  PURPLE_30,
-  PURPLE_20,
 };

@@ -1,18 +1,33 @@
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { X } from 'lucide-react-native';
-import { BRAND_CREAM, BRAND_PURPLE, CARD_SHADOW } from "@/constants/Colors";
+import {
+    BRAND_CREAM,
+    BRAND_INK,
+    BRAND_LILAC_TEXT,
+    BRAND_MUTED,
+    BRAND_PURPLE,
+    BRAND_PURPLE_MID,
+    OUTLINE,
+    RADIUS,
+    SHADOW,
+    WHITE,
+} from "@/constants/Colors";
 import { QUARTER_PASS_DISPLAY_DATE, QUARTER_PASS_NAME } from '@/constants/quarterPass';
 import { PRODUCT_TYPE } from 'react-native-purchases';
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { openPrivacyPolicy, openTermsOfService } from '@/utils/pdfViewer';
-import TactileButton from '@/components/TactileButton';
+import Display from '@/components/ui/Display';
+import Icon from '@/components/ui/Icon';
+import { DarkButton, PrimaryButton, TextButton } from '@/components/ui/Button';
 
 interface PaywallScreenProps {
     onClose?: () => void;
+    // a way past the paywall without buying, e.g. "View coupons first" in the intro
+    skipLabel?: string;
+    onSkip?: () => void;
 }
 
 // "Fall 2026 Quarter Pass" → "Fall Quarter Pass", "December 13, 2026" → "December 13"
@@ -26,7 +41,7 @@ const ONE_TIME_PRODUCT_TYPES: string[] = [
     PRODUCT_TYPE.PREPAID_SUBSCRIPTION,
 ];
 
-export default function PaywallScreen({ onClose }: PaywallScreenProps) {
+export default function PaywallScreen({ onClose, skipLabel, onSkip }: PaywallScreenProps) {
     const insets = useSafeAreaInsets();
 
     const {
@@ -55,150 +70,163 @@ export default function PaywallScreen({ onClose }: PaywallScreenProps) {
     // one purchase flow at a time — StoreKit queues sheets badly if they overlap
     const isBusy = isPurchasing || isRestoring || isRedeemingOfferCode;
 
+    const footerLink = (label: string, onPress: () => void, disabled?: boolean) => (
+        <Pressable
+            onPress={onPress}
+            disabled={disabled}
+            accessibilityRole="button"
+            style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 8, opacity: disabled ? 0.5 : 1 }}
+        >
+            {({ pressed }) => (
+                <Text style={{ opacity: pressed ? 0.6 : 1, fontFamily: 'Figtree_600SemiBold', fontSize: 14, color: BRAND_MUTED }}>{label}</Text>
+            )}
+        </Pressable>
+    );
+    const dot = <Text style={{ fontFamily: 'Figtree_700Bold', fontSize: 14, color: BRAND_MUTED }}>·</Text>;
+
     return (
-        <View className="flex-1 bg-brand-cream-soft">
+        <View style={{ flex: 1, backgroundColor: BRAND_CREAM }}>
             <StatusBar style="light" />
             <ScrollView
-                className="flex-1"
+                style={{ flex: 1 }}
                 contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 16 }}
                 showsVerticalScrollIndicator={false}
                 bounces={false}
             >
                 {/* purple hero */}
                 <View
-                    className="overflow-hidden rounded-b-[40px] bg-brand-purple px-6 pb-9"
-                    style={{ paddingTop: insets.top + 8 }}
+                    style={{
+                        backgroundColor: BRAND_PURPLE,
+                        borderBottomWidth: OUTLINE,
+                        borderBottomColor: BRAND_INK,
+                        paddingHorizontal: 20,
+                        paddingTop: insets.top + 8,
+                        paddingBottom: 28,
+                    }}
                 >
-                    {/* decorative rings */}
-                    <View pointerEvents="none" className="absolute -right-24 -top-10 h-72 w-72 rounded-full border-[28px] border-white/5" />
-                    <View pointerEvents="none" className="absolute -bottom-28 -left-28 h-72 w-72 rounded-full border-[28px] border-white/5" />
-
-                    <View className="flex-row items-center justify-between">
-                        <TouchableOpacity
-                            className="h-11 w-11 items-center justify-center rounded-full bg-white/15"
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Pressable
                             onPress={onClose ?? logout}
                             accessibilityRole="button"
                             accessibilityLabel={onClose ? 'Close' : 'Sign out'}
+                            hitSlop={4}
+                            style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: 20,
+                                borderWidth: OUTLINE,
+                                borderColor: BRAND_INK,
+                                backgroundColor: WHITE,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
                         >
-                            <X size={18} color={BRAND_CREAM} strokeWidth={2.5} />
-                        </TouchableOpacity>
-                        <View className="rounded-full bg-brand-cream px-4 py-2">
-                            <Text className="font-display text-xs uppercase tracking-widest text-brand-purple">
-                                {PASS_BADGE}
-                            </Text>
-                        </View>
+                            <Icon name="close" size={20} />
+                        </Pressable>
+                        <Text style={{ fontFamily: 'Figtree_700Bold', fontSize: 15, color: BRAND_CREAM }}>{PASS_BADGE}</Text>
                     </View>
 
-                    <View className="mt-2 h-48 items-center justify-center">
-                        <View className="absolute h-44 w-44 rounded-full bg-white/5" />
+                    {/* Willie on a lighter purple circle, as on Profile */}
+                    <View style={{ marginTop: 16, height: 184, alignItems: 'center', justifyContent: 'center' }}>
+                        <View style={{ position: 'absolute', width: 168, height: 168, borderRadius: 84, backgroundColor: BRAND_PURPLE_MID }} />
                         <Image
-                            source={require('../assets/images/willie/make-it-rain.png')}
+                            source={require('../assets/images/willie/money-toss.png')}
                             contentFit="contain"
                             accessibilityLabel="Willie tossing dollar bills"
-                            style={{ width: 176, height: 176 }}
+                            style={{ width: 160, height: 180 }}
                         />
-                        <View
-                            className="absolute right-0 top-0 items-center rounded-2xl bg-white px-4 py-3"
-                            style={[CARD_SHADOW, { transform: [{ rotate: '4deg' }] }]}
-                        >
-                            <Text className="font-display text-[10px] uppercase tracking-widest text-brand-purple-soft">
-                                Potential savings
-                            </Text>
-                            <Text className="font-display-bold text-2xl text-brand-purple">$300+</Text>
-                        </View>
                     </View>
 
-                    <Text accessibilityRole="header" className="mt-4 text-center font-display-bold text-[32px] leading-10 text-white">
-                        Make Evanston{'\n'}
-                        <Text className="text-brand-cream">a little more affordable.</Text>
-                    </Text>
-                    <Text className="mt-3 px-2 text-center font-body text-base leading-6 text-white/75">
-                        Unlock the student deals you'll actually use{'\n'}all quarter long.
+                    <Display accessibilityRole="header" size={36} color={BRAND_CREAM} style={{ marginTop: 16, textAlign: 'center' }}>
+                        Make Evanston a little more affordable.
+                    </Display>
+                    <Text style={{ marginTop: 12, paddingHorizontal: 8, textAlign: 'center', fontFamily: 'Figtree_400Regular', fontSize: 16, lineHeight: 23, color: BRAND_LILAC_TEXT }}>
+                        Unlock the student deals you'll actually use all quarter long.
                     </Text>
                 </View>
 
-                <View className="flex-1 px-6 pt-6">
-                    <View className="flex-row items-center rounded-card border border-brand-tan bg-white px-5 py-5">
-                        <View className="flex-1 pr-3">
-                            <Text className="font-display text-xs uppercase tracking-widest text-brand-purple-soft">
+                <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 24 }}>
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            paddingHorizontal: 18,
+                            paddingVertical: 18,
+                            borderRadius: RADIUS.card,
+                            borderWidth: OUTLINE,
+                            borderColor: BRAND_INK,
+                            backgroundColor: WHITE,
+                        }}
+                    >
+                        <View style={{ flex: 1, paddingRight: 12 }}>
+                            <Text style={{ fontFamily: 'Figtree_700Bold', fontSize: 17, color: BRAND_INK }}>
                                 {isOneTime ? 'One-time quarter pass' : 'Quarter pass'}
                             </Text>
-                            <Text className="mt-1.5 font-body text-base text-brand-ink">
+                            <Text style={{ marginTop: 4, fontFamily: 'Figtree_400Regular', fontSize: 15, color: BRAND_MUTED }}>
                                 Access through {ACCESS_THROUGH}
                             </Text>
                         </View>
-                        <View className="items-end">
+                        <View style={{ alignItems: 'flex-end' }}>
                             {passProduct ? (
-                                <Text className="font-display-bold text-4xl leading-[44px] text-brand-purple">
-                                    {passProduct.priceString}
-                                </Text>
+                                <Display size={40}>{passProduct.priceString}</Display>
                             ) : isPassUnavailable ? (
-                                <TouchableOpacity
+                                <Pressable
                                     onPress={() => reloadPassProduct()}
-                                    className="min-h-11 items-end justify-center"
+                                    style={{ minHeight: 44, alignItems: 'flex-end', justifyContent: 'center' }}
                                     accessibilityRole="button"
                                     accessibilityLabel="Price unavailable. Try again"
                                 >
-                                    <Text className="font-body text-sm text-brand-purple-soft">Price unavailable</Text>
-                                    <Text className="font-display-medium text-base text-brand-purple">Try again</Text>
-                                </TouchableOpacity>
+                                    <Text style={{ fontFamily: 'Figtree_400Regular', fontSize: 14, color: BRAND_MUTED }}>Price unavailable</Text>
+                                    <Text style={{ fontFamily: 'Figtree_700Bold', fontSize: 16, color: BRAND_INK, textDecorationLine: 'underline' }}>Try again</Text>
+                                </Pressable>
                             ) : (
-                                <ActivityIndicator color={BRAND_PURPLE} />
+                                <ActivityIndicator color={BRAND_INK} />
                             )}
                             {renewalLabel ? (
-                                <Text className="font-body text-xs text-brand-purple-soft">{renewalLabel}</Text>
+                                <Text style={{ marginTop: 2, fontFamily: 'Figtree_500Medium', fontSize: 13, color: BRAND_MUTED }}>{renewalLabel}</Text>
                             ) : null}
                         </View>
                     </View>
 
-                    <TactileButton
+                    <PrimaryButton
                         label="Get my quarter pass"
                         onPress={() => subscribe()}
                         disabled={isBusy || !passProduct}
-                        className="mt-6"
+                        style={{ marginTop: 24 }}
                     >
-                        {isPurchasing ? <ActivityIndicator color={BRAND_CREAM} /> : undefined}
-                    </TactileButton>
-                    <Text className="mt-3 text-center font-body text-sm text-brand-purple-soft">
+                        {isPurchasing ? <ActivityIndicator color={BRAND_INK} /> : undefined}
+                    </PrimaryButton>
+                    <Text style={{ marginTop: 10, textAlign: 'center', fontFamily: 'Figtree_500Medium', fontSize: 14, color: BRAND_MUTED }}>
                         That's less than one coffee for a full quarter of deals.
                     </Text>
 
+                    {/* flat, so the yellow button stays the one raised action; the
+                        right margin matches the primary button's shadow room */}
+                    {onSkip && skipLabel ? (
+                        <DarkButton label={skipLabel} onPress={onSkip} disabled={isBusy} style={{ marginTop: 16, marginRight: SHADOW }} />
+                    ) : null}
+
                     {canRedeemOfferCodes && (
-                        <TouchableOpacity
-                            className="mt-5 min-h-11 items-center justify-center"
-                            onPress={() => redeemOfferCode()}
-                            disabled={isBusy}
-                            accessibilityRole="button"
-                        >
+                        <View style={{ marginTop: 16, alignItems: 'center' }}>
                             {isRedeemingOfferCode ? (
-                                <ActivityIndicator color={BRAND_PURPLE} />
+                                <ActivityIndicator color={BRAND_INK} style={{ minHeight: 44 }} />
                             ) : (
-                                <Text className={`font-display-medium text-lg text-brand-purple ${isBusy ? 'opacity-60' : ''}`}>
-                                    Have a promo code?
-                                </Text>
+                                <TextButton label="Have a promo code?" onPress={() => redeemOfferCode()} disabled={isBusy} underline />
                             )}
-                        </TouchableOpacity>
+                        </View>
                     )}
                     {isRedeemingOfferCode && (
-                        <Text className="mt-1 px-6 text-center font-body text-sm leading-snug text-brand-purple-soft">
+                        <Text style={{ marginTop: 4, paddingHorizontal: 24, textAlign: 'center', fontFamily: 'Figtree_400Regular', fontSize: 14, lineHeight: 20, color: BRAND_MUTED }}>
                             Finishing up your promo code… this can take a few seconds.
                         </Text>
                     )}
 
-                    <View className="mt-auto flex-row items-center justify-center pt-5">
-                        <TouchableOpacity onPress={() => restorePurchases()} disabled={isBusy} className="min-h-11 justify-center px-2">
-                            <Text className={`font-body text-sm text-brand-purple-soft ${isBusy ? 'opacity-60' : ''}`}>
-                                {isRestoring ? 'Restoring…' : 'Restore purchase'}
-                            </Text>
-                        </TouchableOpacity>
-                        <View className="mx-2 h-1 w-1 rounded-full bg-purple-20" />
-                        <TouchableOpacity onPress={openTermsOfService} className="min-h-11 justify-center px-2">
-                            <Text className="font-body text-sm text-brand-purple-soft">Terms</Text>
-                        </TouchableOpacity>
-                        <View className="mx-2 h-1 w-1 rounded-full bg-purple-20" />
-                        <TouchableOpacity onPress={openPrivacyPolicy} className="min-h-11 justify-center px-2">
-                            <Text className="font-body text-sm text-brand-purple-soft">Privacy</Text>
-                        </TouchableOpacity>
+                    <View style={{ marginTop: 'auto', paddingTop: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                        {footerLink(isRestoring ? 'Restoring…' : 'Restore purchase', () => restorePurchases(), isBusy)}
+                        {dot}
+                        {footerLink('Terms', openTermsOfService)}
+                        {dot}
+                        {footerLink('Privacy', openPrivacyPolicy)}
                     </View>
                 </View>
             </ScrollView>

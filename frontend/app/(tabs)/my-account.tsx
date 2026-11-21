@@ -1,8 +1,19 @@
-import { TouchableOpacity, Linking, Alert, Modal, ScrollView } from 'react-native';
-import { BRAND_DANGER, BRAND_PURPLE, CARD_SHADOW } from '@/constants/Colors';
-import { View, Text } from 'react-native';
+import { Linking, Alert, Modal, ScrollView, View, Text } from 'react-native';
 import { Image } from 'expo-image';
-import { Settings, MessageCircleQuestionMark, File, Lock, Trash2, LogOut, Sparkles, ChevronRight, Cat } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  BRAND_CREAM,
+  BRAND_DANGER,
+  BRAND_INK,
+  BRAND_MUTED,
+  BRAND_PURPLE,
+  BRAND_PURPLE_MID,
+  BRAND_YELLOW,
+  OUTLINE,
+  RADIUS,
+  SHADOW,
+  WHITE,
+} from '@/constants/Colors';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useCoupons } from '@/contexts/CouponsContext';
@@ -10,10 +21,20 @@ import { useUsage } from '@/contexts/UsageContext';
 import { useSavedCoupons } from '@/contexts/SavedCouponsContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { openPrivacyPolicy, openTermsOfService } from '../../utils/pdfViewer';
-import BrandHeader from '@/components/BrandHeader';
+import { BrandLockup } from '@/components/BrandHeader';
 import PaywallScreen from '@/components/PaywallScreen';
 import NearbyAlertsToggle from '@/components/NearbyAlertsToggle';
+import Display from '@/components/ui/Display';
+import Icon, { IconName } from '@/components/ui/Icon';
+import SettingsRow from '@/components/ui/SettingsRow';
+import { Raised } from '@/components/ui/Raised';
+import { DarkButton } from '@/components/ui/Button';
 import { useState } from 'react';
+
+// Willie stands on a lighter purple circle in the header
+const WILLIE_WIDTH = 112;
+// arms-up.png is 533 x 700
+const WILLIE_HEIGHT = Math.round((WILLIE_WIDTH * 700) / 533);
 
 const getInitials = (name: string | undefined, email: string | undefined) => {
   const source = name?.trim() || email?.split('@')[0] || '';
@@ -31,6 +52,7 @@ export default function MyAccount() {
   const { replayOnboarding } = useOnboarding();
 
   const [showPaywall, setShowPaywall] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const fullName: string | undefined = user?.user_metadata?.full_name;
   const firstName = fullName?.trim().split(/\s+/)[0];
@@ -89,25 +111,26 @@ export default function MyAccount() {
 
 
 
-  const menuItems = [
+  const menuItems: { icon: IconName; label: string; onPress: () => void; destructive?: boolean }[] = [
     isSubscribed
-      ? { icon: Settings, label: 'Unsubscribe', onPress: handleManageSubscription }
-      : { icon: Sparkles, label: 'Subscribe', onPress: () => setShowPaywall(true) },
-    { icon: Cat, label: 'Meet Willie', onPress: replayOnboarding },
-    { icon: MessageCircleQuestionMark, label: 'Support', onPress: handleSupport },
-    { icon: File, label: 'Terms of Service', onPress: openTermsOfService },
-    { icon: Lock, label: 'Privacy Policy', onPress: openPrivacyPolicy },
-    { icon: Trash2, label: 'Delete Account', onPress: handleDeleteAccount, destructive: true },
+      ? { icon: 'unsubscribe', label: 'Unsubscribe', onPress: handleManageSubscription }
+      : { icon: 'tag', label: 'Subscribe', onPress: () => setShowPaywall(true) },
+    { icon: 'meetWillie', label: 'Meet Willie', onPress: replayOnboarding },
+    { icon: 'support', label: 'Support', onPress: handleSupport },
+    { icon: 'document', label: 'Terms of Service', onPress: openTermsOfService },
+    { icon: 'lock', label: 'Privacy Policy', onPress: openPrivacyPolicy },
+    { icon: 'trash', label: 'Delete Account', onPress: handleDeleteAccount, destructive: true },
+    { icon: 'logout', label: 'Log Out', onPress: logout },
   ];
 
-  const stats = [
-    { label: 'Coupons used', value: couponsUsed },
-    ...(isSavingAvailable ? [{ label: 'Saved', value: savedIds.size }] : []),
-    { label: 'Open deals', value: activeCoupons.length },
-  ];
+  // the header already says how many coupons were used; the rest is one line
+  const countsLine = [
+    ...(isSavingAvailable ? [`${savedIds.size} saved`] : []),
+    `${activeCoupons.length} deal${activeCoupons.length === 1 ? '' : 's'} open`,
+  ].join(' · ');
 
   return (
-    <View className="flex-1 bg-brand-cream-soft">
+    <View style={{ flex: 1, backgroundColor: BRAND_CREAM }}>
       {/* full-screen modal so the paywall covers the tab bar like it does elsewhere */}
       {/* the paywall closes itself once the purchase lands and isSubscribed flips */}
       <Modal
@@ -119,125 +142,128 @@ export default function MyAccount() {
         <PaywallScreen onClose={() => setShowPaywall(false)} />
       </Modal>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
-        {/* summary header */}
-        <BrandHeader overlap={44}>
-          <View className="flex-row items-end">
-            <View className="flex-1">
-              <Text accessibilityRole="header" className="mt-5 font-display text-[26px] leading-8 text-white">
-                {firstName ? `Hey ${firstName},` : 'Hey there,'}
-              </Text>
-              <Text className="font-display text-[26px] leading-8 text-brand-cream">
-                {couponsUsed > 0
-                  ? `you've used ${couponsUsed} coupon${couponsUsed === 1 ? '' : 's'}.`
-                  : "let's find your first deal."}
-              </Text>
-            </View>
-            <Image
-              source={require('@/assets/images/willie/arms-up.png')}
-              style={{ width: 96, height: 96, marginLeft: 8 }}
-              contentFit="contain"
-              accessible={false}
-            />
-          </View>
-        </BrandHeader>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
+        {/* summary header; the profile card overlaps its bottom 44pt */}
+        <View
+          style={{
+            backgroundColor: BRAND_PURPLE,
+            borderBottomWidth: OUTLINE,
+            borderBottomColor: BRAND_INK,
+            paddingHorizontal: 20,
+            paddingTop: insets.top + 8,
+            paddingBottom: 64,
+            overflow: 'hidden',
+          }}
+        >
+          <View
+            pointerEvents="none"
+            style={{ position: 'absolute', width: 150, height: 150, borderRadius: 75, right: 6, top: insets.top + 12, backgroundColor: BRAND_PURPLE_MID }}
+          />
+          <Image
+            source={require('@/assets/images/willie/arms-up.png')}
+            contentFit="contain"
+            accessible={false}
+            style={{ position: 'absolute', right: 26, top: insets.top + 16, width: WILLIE_WIDTH, height: WILLIE_HEIGHT }}
+          />
+          <BrandLockup />
+          <Display accessibilityRole="header" size={34} color={BRAND_CREAM} style={{ marginTop: 16, paddingRight: 120 }}>
+            {firstName ? `Hey ${firstName},\n` : 'Hey there,\n'}
+            {couponsUsed > 0
+              ? `you've used ${couponsUsed} coupon${couponsUsed === 1 ? '' : 's'}.`
+              : "let's find your first deal."}
+          </Display>
+        </View>
 
-        <View className="-mt-11 px-5">
+        <View style={{ marginTop: -44, marginLeft: 16, marginRight: 16, gap: 10 }}>
           {/* identity card */}
-          <View className="rounded-card border border-brand-tan bg-white p-4" style={CARD_SHADOW}>
-            <View className="flex-row items-center">
-              <View className="h-14 w-14 items-center justify-center rounded-full bg-brand-purple">
-                <Text className="font-display text-xl text-white">{getInitials(fullName, user?.email)}</Text>
-              </View>
-              <View className="ml-3 flex-1">
-                {/* eventually this will be fetched from the OAuth session */}
-                <Text numberOfLines={1} className="font-display text-xl text-brand-purple">{fullName || 'Wildcat'}</Text>
-                <Text numberOfLines={1} className="font-body text-sm text-brand-purple-soft">{user?.email}</Text>
-              </View>
-            </View>
-
-            <View className="mt-4 flex-row border-t border-brand-cream pt-3">
-              {stats.map((stat, index) => (
-                <View
-                  key={stat.label}
-                  className={`flex-1 items-center ${index > 0 ? 'border-l border-brand-cream' : ''}`}
-                  accessible
-                  accessibilityLabel={`${stat.value} ${stat.label}`}
-                >
-                  <Text className="font-display text-2xl text-brand-purple">{stat.value}</Text>
-                  <Text className="font-display-medium text-xs text-brand-purple-soft">{stat.label}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-
-          {/* student pass card */}
-          <View className="mt-4 rounded-card border border-brand-tan bg-brand-cream p-4">
-            <View className="flex-row items-start justify-between">
-              <View className="flex-1 pr-3">
-                <Text className="font-display-medium text-xs uppercase tracking-widest text-brand-purple-soft">
-                  Student pass
-                </Text>
-                <Text className="mt-1 font-display text-xl text-brand-purple">Quarter Coupon Pass</Text>
-                <Text className="mt-1 font-body-medium text-sm text-brand-ink">
-                  {isSubscribed
-                    ? `Expires ${subscriptionExpiration ? subscriptionExpiration.toLocaleDateString('en-US', { timeZone: 'America/Chicago', month: 'long', day: 'numeric', year: 'numeric' }) : '—'}`
-                    : 'Not active yet'}
-                </Text>
-              </View>
-              <View className={`rounded-full px-3 py-1.5 ${isSubscribed ? 'bg-brand-purple' : 'bg-white'}`}>
-                <Text className={`font-display-medium text-xs ${isSubscribed ? 'text-brand-cream' : 'text-brand-purple-soft'}`}>
-                  {isSubscribed ? 'Active' : 'Inactive'}
-                </Text>
-              </View>
-            </View>
-            {!isSubscribed ? (
-              <TouchableOpacity
-                onPress={() => setShowPaywall(true)}
-                accessibilityRole="button"
-                className="mt-4 min-h-12 items-center justify-center rounded-full bg-brand-purple"
+          <Raised radius={RADIUS.card} style={{ marginRight: SHADOW, marginBottom: SHADOW }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingVertical: 14,
+                paddingHorizontal: 16,
+                borderRadius: RADIUS.card,
+                borderWidth: OUTLINE,
+                borderColor: BRAND_INK,
+                backgroundColor: WHITE,
+              }}
+            >
+              <View
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 28,
+                  borderWidth: OUTLINE,
+                  borderColor: BRAND_INK,
+                  backgroundColor: BRAND_PURPLE,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
-                <Text className="font-display text-lg text-brand-cream">Get the pass</Text>
-              </TouchableOpacity>
-            ) : null}
-          </View>
+                <Display size={20} color={BRAND_CREAM}>{getInitials(fullName, user?.email)}</Display>
+              </View>
+              <View style={{ flex: 1, minWidth: 0, marginLeft: 14 }}>
+                {/* eventually this will be fetched from the OAuth session */}
+                <Display size={22} numberOfLines={1}>{fullName || 'Wildcat'}</Display>
+                <Text numberOfLines={1} style={{ marginTop: 2, fontFamily: 'Figtree_400Regular', fontSize: 14, color: BRAND_MUTED }}>
+                  {user?.email}
+                </Text>
+                <Text style={{ marginTop: 4, fontFamily: 'Figtree_600SemiBold', fontSize: 14, color: BRAND_INK }}>{countsLine}</Text>
+              </View>
+            </View>
+          </Raised>
 
-          <NearbyAlertsToggle />
-
-          {/* account and support */}
-          <View className="mt-4 overflow-hidden rounded-card border border-brand-tan bg-white">
-            {menuItems.map((item, index) => {
-              const Icon = item.icon;
-              const tint = item.destructive ? BRAND_DANGER : BRAND_PURPLE;
-              return (
-                <TouchableOpacity
-                  key={item.label}
-                  accessibilityRole="button"
-                  className={`min-h-14 flex-row items-center px-4 py-3 ${index > 0 ? 'border-t border-brand-cream' : ''}`}
-                  onPress={item.onPress}
-                >
-                  <View className="h-9 w-9 items-center justify-center rounded-full bg-brand-cream">
-                    <Icon size={18} color={tint} />
+          {/* student pass */}
+          <Raised radius={RADIUS.card} style={{ marginRight: SHADOW, marginBottom: SHADOW }}>
+            <View
+              style={{
+                paddingVertical: 16,
+                paddingHorizontal: 18,
+                borderRadius: RADIUS.card,
+                borderWidth: OUTLINE,
+                borderColor: BRAND_INK,
+                backgroundColor: BRAND_YELLOW,
+              }}
+            >
+              <Display size={24}>Quarter Coupon Pass</Display>
+              <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text style={{ flexShrink: 1, fontFamily: 'Figtree_600SemiBold', fontSize: 15, color: BRAND_INK }}>
+                  {!isSubscribed
+                    ? 'Not active yet'
+                    : subscriptionExpiration
+                      ? `Expires ${subscriptionExpiration.toLocaleDateString('en-US', { timeZone: 'America/Chicago', month: 'long', day: 'numeric', year: 'numeric' })}`
+                      : ''}
+                </Text>
+                {isSubscribed ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 12 }}>
+                    <Icon name="check" size={18} strokeWidth={3} />
+                    <Text style={{ marginLeft: 4, fontFamily: 'Figtree_700Bold', fontSize: 15, color: BRAND_INK }}>Active</Text>
                   </View>
-                  <Text
-                    className={`ml-3 flex-1 font-body-medium text-base ${item.destructive ? 'text-brand-danger' : 'text-brand-ink'}`}
-                  >
-                    {item.label}
-                  </Text>
-                  <ChevronRight size={18} color={tint} opacity={0.4} />
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+                ) : (
+                  <Text style={{ marginLeft: 12, fontFamily: 'Figtree_700Bold', fontSize: 15, color: BRAND_INK }}>Inactive</Text>
+                )}
+              </View>
+              {!isSubscribed ? (
+                <DarkButton label="Get the pass" onPress={() => setShowPaywall(true)} size="sm" style={{ marginTop: 14 }} />
+              ) : null}
+            </View>
+          </Raised>
+        </View>
 
-          <TouchableOpacity
-            onPress={logout}
-            accessibilityRole="button"
-            className="mt-6 min-h-12 flex-row items-center justify-center rounded-card border border-brand-tan bg-white"
-          >
-            <LogOut size={18} color={BRAND_PURPLE} />
-            <Text className="ml-2 font-body-medium text-base text-brand-purple">Log Out</Text>
-          </TouchableOpacity>
+        {/* settings: plain rows on the page, same order as before */}
+        <View style={{ marginTop: 6, marginHorizontal: 20 }}>
+          <NearbyAlertsToggle />
+          {menuItems.map(item => (
+            <SettingsRow
+              key={item.label}
+              icon={item.icon}
+              label={item.label}
+              onPress={item.onPress}
+              color={item.destructive ? BRAND_DANGER : BRAND_INK}
+              divider
+            />
+          ))}
         </View>
       </ScrollView>
     </View>

@@ -1,18 +1,20 @@
-import { Link, Stack } from 'expo-router';
-import { Text, View } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
+import { View } from 'react-native';
+import Display from '@/components/ui/Display';
+import { DarkButton } from '@/components/ui/Button';
+import { BRAND_CREAM } from '@/constants/Colors';
 
 export default function NotFoundScreen() {
+  const router = useRouter();
+
   return (
     <>
       <Stack.Screen options={{ title: 'Oops!' }} />
-      <View className="flex-1 items-center justify-center bg-brand-cream-soft p-5">
-        <Text className="text-center font-display text-2xl text-brand-purple">
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: BRAND_CREAM }}>
+        <Display size={30} style={{ textAlign: 'center' }}>
           This screen doesn't exist.
-        </Text>
-
-        <Link href="/(tabs)" className="mt-6 rounded-full bg-brand-purple px-8 py-4">
-          <Text className="font-display text-base text-brand-cream">Go to home screen!</Text>
-        </Link>
+        </Display>
+        <DarkButton label="Go to home screen!" onPress={() => router.replace('/(tabs)')} style={{ marginTop: 24 }} />
       </View>
     </>
   );

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useMemo, useState, ReactNode } from 'react';
 
 interface UsageContextType {
     userCouponToUsages: Map<number, number>;
@@ -21,12 +21,13 @@ export function UsageProvider({ children }: UsageProviderProps) {
     const [userCouponToLastUsedAt, setUserCouponToLastUsedAt] = useState<Map<number, string>>(new Map());
 
 
-    const contextValue: UsageContextType = {
+    // memoized so a re-render of this provider alone doesn't re-render every card
+    const contextValue = useMemo<UsageContextType>(() => ({
         userCouponToUsages,
         setUserCouponToUsages,
         userCouponToLastUsedAt,
         setUserCouponToLastUsedAt,
-    };
+    }), [userCouponToUsages, userCouponToLastUsedAt]);
 
     
     return (

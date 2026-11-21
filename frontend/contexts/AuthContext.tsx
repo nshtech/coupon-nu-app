@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState, ReactNode, useEffect } from 'react';
 import { Alert } from 'react-native';
 import { supabase } from '@/utils/supabase';
 import { Session, User } from '@supabase/supabase-js';
@@ -7,6 +7,15 @@ import { disableNearbyAlerts } from '@/utils/nearbyAlerts';
 
 const ENFORCE_NORTHWESTERN_DOMAIN =
     process.env.EXPO_PUBLIC_ENFORCE_NORTHWESTERN_DOMAIN !== 'false';
+
+const isNorthwesternEmail = (email?: string) => {
+    if (!email) return false;
+    const domain = email.toLowerCase().split('@')[1] ?? '';
+    return domain === 'northwestern.edu' || domain.endsWith('.northwestern.edu');
+};
+
+const isAllowedEmail = (email?: string) =>
+    !ENFORCE_NORTHWESTERN_DOMAIN || isNorthwesternEmail(email);
 
 interface AuthContextType {
     isLoggedIn: boolean;
@@ -34,11 +43,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const [isNorthwesternUser, setIsNorthwesternUser] = useState<boolean>(false);
     const [session, setSession] = useState<Session | null>(null);
     const [user, setUser] = useState<User | null>(null);
-    const login = () => {
-        setIsLoggedIn(true);
-    };
 
-    const logout = async () => {
+    // Every token refresh (hourly, and on each return to the app) hands over a new
+    // session with a new but identical user object. Keep the old object unless the
+    // account or its record changed, so effects keyed on `user` (coupon, saved and
+    // pass loads) don't all re-run and re-fetch on every refresh.
+    const applySession = useCallback((next: Session | null) => {
+        setSession(next);
+        setIsLoggedIn(!!next);
+        setIsNorthwesternUser(next ? isAllowedEmail(next.user.email) : false);
+        setUser(prev => {
+            const nextUser = next?.user ?? null;
+            if (prev && nextUser && prev.id === nextUser.id && prev.updated_at === nextUser.updated_at) return prev;
+            return nextUser;
+        });
+    }, []);
+
+    const login = useCallback(() => {
+        setIsLoggedIn(true);
+    }, []);
+
+    const logout = useCallback(async () => {
         // the geofence is per device; don't keep pinging a signed-out phone.
         // Only a failure to clear the opt-in throws; a stuck geofence stays silent.
         try {
@@ -55,93 +80,51 @@ export function AuthProvider({ children }: AuthProviderProps) {
             return;
         }
 
-        setSession(null);
-        setUser(null);
-        setIsNorthwesternUser(false);
-        console.log("SESSION UPON LOGOUT",session);
-        console.log("USER UPON LOGOUT", user);
-      };
+        applySession(null);
+    }, [applySession]);
 
-    const deleteAccount = async () => {
-        if (!session?.access_token) {
+    const deleteAccount = useCallback(async () => {
+        // getSession() refreshes an expired token first; the one in state can be
+        // stale if the app sat in the background with refresh paused
+        const { data: { session: current } } = await supabase.auth.getSession();
+        if (!current?.access_token) {
             throw new Error('No active session');
         }
 
         try {
-            const accessToken = session.access_token;
-
             // before the delete, so a failure to clear the opt-in aborts while it can
             // still be retried; a geofence that fails to stop is logged, not thrown
             await disableNearbyAlerts();
 
-            await deleteAccountAPI(accessToken);
-            console.log('Account deleted successfully');
+            await deleteAccountAPI(current.access_token);
 
             await supabase.auth.signOut(); // clears local session to prevent being stuck at paywall
-            console.log('Signed out from Supabase');
-            
+
             // to be safe
-            setIsLoggedIn(false);
-            setSession(null);
-            setUser(null);
-            setIsNorthwesternUser(false);
-            
+            applySession(null);
         } catch (error) {
             console.error('Error deleting account:', error);
             throw error; // Re-throw so the UI can handle it
         }
-    };
-
-
+    }, [applySession]);
 
     useEffect(() => {
-        const isNorthwesternEmail = (email?: string) => {
-            if (!email) return false;
-            const domain = email.toLowerCase().split('@')[1] ?? '';
-            return domain === 'northwestern.edu' || domain.endsWith('.northwestern.edu');
-        };
-
-        const isAllowedEmail = (email?: string) =>
-            !ENFORCE_NORTHWESTERN_DOMAIN || isNorthwesternEmail(email);
-
         // Get initial session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setIsLoggedIn(!!session);
-            if (session) {
-                setSession(session);
-                setUser(session.user);
-                setIsNorthwesternUser(isAllowedEmail(session.user.email));
-            } else {
-                setSession(null);
-                setUser(null);
-                setIsNorthwesternUser(false);
-            }
-        }).finally(() => setIsAuthLoading(false));
+        supabase.auth.getSession()
+            .then(({ data: { session } }) => applySession(session))
+            .finally(() => setIsAuthLoading(false));
 
-        // listen for session changes
-        const { data: listener } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
-            setIsLoggedIn(!!session);
-            // if there is a session, set the session
-            if (session) {
-                setSession(session);
-                setUser(session.user);
-                setIsNorthwesternUser(isAllowedEmail(session.user.email));
-                console.log('[AuthProvider] Session set!', session);
-                console.log("[AuthProvider] JWT Token:", session.access_token);
-            } else {
-                setSession(null);
-                setUser(null);
-                setIsNorthwesternUser(false);
-            }
-
+        // listen for session changes (sign in/out, token refresh, user updates)
+        const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+            applySession(session);
         });
         return () => {
             listener?.subscription.unsubscribe();
         };
-    }, []);
+    }, [applySession]);
 
     // what is accessible to the children
-    const contextValue: AuthContextType = {
+    const contextValue = useMemo<AuthContextType>(() => ({
         isLoggedIn,
         isAuthLoading,
         isNorthwesternUser,
@@ -150,7 +133,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         login,
         logout,
         deleteAccount,
-    };
+    }), [isLoggedIn, isAuthLoading, isNorthwesternUser, session, user, login, logout, deleteAccount]);
 
     return (
         <AuthContext.Provider value={contextValue}>
@@ -170,4 +153,3 @@ export function useAuth() {
 
     return context;
 }
-

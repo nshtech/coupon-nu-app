@@ -22,6 +22,7 @@ export default function Saved() {
       headline={headline}
       coupons={savedCoupons}
       searchPlaceholder="Search saved deals"
+      countLabel={() => 'saved'}
       emptyState={
         isSavingAvailable
           ? {
@@ -29,12 +30,14 @@ export default function Saved() {
               message: 'Tap the heart on any deal and it will wait for you here.',
               actionLabel: 'Browse deals',
               onAction: () => router.navigate('/'),
+              image: require('@/assets/images/willie/heart-eyes.png'),
             }
           : {
               title: 'Saving is coming soon',
               message: "We're still setting up saved deals. Hang tight!",
               actionLabel: 'Browse deals',
               onAction: () => router.navigate('/'),
+              image: require('@/assets/images/willie/heart-eyes.png'),
             }
       }
     />

@@ -1,4 +1,3 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -11,19 +10,9 @@ import RestrictedDomainScreen from '@/components/RestrictedDomainScreen';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 import * as WebBrowser from 'expo-web-browser';
-import {
-  Ubuntu_400Regular,
-  Ubuntu_500Medium,
-  Ubuntu_700Bold,
-} from '@expo-google-fonts/ubuntu';
-import {
-  Fredoka_500Medium,
-  Fredoka_600SemiBold,
-  Fredoka_700Bold,
-} from '@expo-google-fonts/fredoka';
 
 import { useColorScheme } from '@/components/useColorScheme';
-import { BRAND_CREAM_SOFT, BRAND_INK, BRAND_PURPLE, BRAND_TAN } from '@/constants/Colors';
+import { BRAND_CREAM, BRAND_INK, BRAND_PURPLE } from '@/constants/Colors';
 
 import "./../global.css"
 import { UsageProvider } from '@/contexts/UsageContext';
@@ -50,15 +39,18 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    // body — Aileron stand-in from the style sheet's Ubuntu fallback
-    Ubuntu_400Regular,
-    Ubuntu_500Medium,
-    Ubuntu_700Bold,
-    // display — TT Masters stand-in
-    Fredoka_500Medium,
-    Fredoka_600SemiBold,
-    Fredoka_700Bold,
-    ...FontAwesome.font,
+    // display: Bricolage Grotesque 800, static cuts of the variable font at
+    // optical size 28 (text sizes) and 48 (36pt and up)
+    BricolageGrotesque_800ExtraBold: require('../assets/fonts/BricolageGrotesque-ExtraBold.ttf'),
+    BricolageGrotesqueDisplay_800ExtraBold: require('../assets/fonts/BricolageGrotesqueDisplay-ExtraBold.ttf'),
+    // body: Figtree 400 to 700 (700 is the heaviest weight in the design)
+    Figtree_400Regular: require('../assets/fonts/Figtree-Regular.ttf'),
+    Figtree_500Medium: require('../assets/fonts/Figtree-Medium.ttf'),
+    Figtree_600SemiBold: require('../assets/fonts/Figtree-SemiBold.ttf'),
+    Figtree_700Bold: require('../assets/fonts/Figtree-Bold.ttf'),
+    // Willie's speech bubbles; stand-in until the team picks Biski or Lazydog
+    Chewy_400Regular: require('../assets/fonts/Chewy-Regular.ttf'),
+    // no icon fonts: icons are SVG (components/ui/Icon.tsx)
   });
 
 
@@ -126,10 +118,10 @@ const BRAND_THEME = {
   colors: {
     ...DefaultTheme.colors,
     primary: BRAND_PURPLE,
-    background: BRAND_CREAM_SOFT,
-    card: BRAND_CREAM_SOFT,
+    background: BRAND_CREAM,
+    card: BRAND_CREAM,
     text: BRAND_INK,
-    border: BRAND_TAN,
+    border: BRAND_INK,
   },
 };
 
@@ -143,7 +135,7 @@ function RootLayoutNav() {
           <StatusBar style="light" />
           <Stack
             initialRouteName="(tabs)"
-            screenOptions={{ contentStyle: { backgroundColor: BRAND_CREAM_SOFT } }}
+            screenOptions={{ contentStyle: { backgroundColor: BRAND_CREAM } }}
           >
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             {/* bottom sheet over the tabs; coupon-detail.tsx animates itself */}

@@ -1,23 +1,45 @@
-import { View, Text, Pressable } from 'react-native';
+import { useState } from 'react';
+import { Text, useWindowDimensions, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Heart, Lock } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useUsage } from '@/contexts/UsageContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useSavedCoupons } from '@/contexts/SavedCouponsContext';
-import { BRAND_CREAM, BRAND_PURPLE, BRAND_PURPLE_SOFT, CARD_SHADOW } from '@/constants/Colors';
-import { logoZoomStyle } from '@/utils/couponImages';
+import { BRAND_INK, BRAND_LILAC, BRAND_MUTED, OUTLINE, RADIUS, SHADOW, WHITE } from '@/constants/Colors';
+import { couponPhoto } from '@/utils/couponImages';
+import { dealCopy } from '@/utils/dealCopy';
+import { RaisedPressable } from '@/components/ui/Raised';
+import Display from '@/components/ui/Display';
+import HeartButton from '@/components/ui/HeartButton';
+import Icon from '@/components/ui/Icon';
+import LogoBadge from '@/components/ui/LogoBadge';
+import UsesLeft, { usesLeftLabel } from '@/components/ui/UsesLeft';
 
-const BLURHASH = '|rF?hV%2WCj[ayj[a|j[az_3fQjZa|j[azf6fQfQfQIpWBj[ayj[a|fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[ayfQfQpwj[fQjEIpayfQj[a|fQjuey';
+// Deal card for the Discover and Saved lists: photo on the left with the logo
+// badge on it, then business name, offer headline, one-line description and
+// uses left. Used-up coupons go flat with a dashed outline and grey pictures.
+//
+// Every card is the same height, so every photo is cropped to the same frame
+// (112 × 150 at default text size). Long text is clamped to fit: the headline
+// gets two lines and the description as many lines as are left.
+
+export const PHOTO_WIDTH = 112;
+const CARD_HEIGHT = 154;
+// outline top and bottom plus the text column's vertical padding; the rest of
+// the height is text and grows with the system text size
+const CARD_CHROME = OUTLINE * 2 + 14 + 12;
+const DESCRIPTION_LINE_HEIGHT = 20;
 
 export default function CouponThumbnail({ coupon, couponTab }: { coupon: any; couponTab: "active" | "expired" }) {
     const router = useRouter();
     const { userCouponToUsages, userCouponToLastUsedAt } = useUsage();
     const { isSubscribed } = useSubscription();
     const { isSaved, toggleSaved, isSavingAvailable } = useSavedCoupons();
-    const [imageFailed, setImageFailed] = useState(false);
+    const [photoFailed, setPhotoFailed] = useState(false);
+    const [descriptionLines, setDescriptionLines] = useState(3);
+    const { fontScale } = useWindowDimensions();
+    const cardHeight = Math.round(CARD_CHROME + (CARD_HEIGHT - CARD_CHROME) * Math.max(1, fontScale));
 
     const handlePress = () => {
         // Simple validation
@@ -32,12 +54,12 @@ export default function CouponThumbnail({ coupon, couponTab }: { coupon: any; co
 
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
 
-        // Navigate with the coupon object directly as a param
-        // This avoids all the URL encoding issues
+        // only the id travels in the route; the sheet looks the coupon up in
+        // CouponsContext rather than trusting params a deep link could forge
         router.push({
             pathname: '/coupon-detail',
             params: {
-                coupon: JSON.stringify(coupon),
+                couponId: String(coupon.coupon_id),
                 ...(usedAt ? { usedAt } : {}),
             }
         });
@@ -45,105 +67,133 @@ export default function CouponThumbnail({ coupon, couponTab }: { coupon: any; co
 
     const couponUses = userCouponToUsages.get(coupon.coupon_id) || 0;
     const usageLimit = coupon.usage_limit === 0 ? Infinity : coupon.usage_limit;
-
     const remainingUses = usageLimit - couponUses;
 
-    // locked coupons look grayed out and still route to the detail screen
-    // (usage receipt for expired, paywall for unsubscribed). Pass-locked cards
-    // still show the deal so people can see what a pass gets them.
+    // Pass-locked cards still show the whole deal so people can see what a pass
+    // gets them; tapping opens the paywall. Expired (used-up) cards open the
+    // usage receipt.
     const isExpired = couponTab === "expired";
     const isPassLocked = !isExpired && !isSubscribed;
-    const isLocked = isExpired || isPassLocked;
     const saved = isSaved(coupon.coupon_id);
-    const hasImage = Boolean(coupon.image_url) && !imageFailed;
-
-    const usesLabel = isExpired
-        ? 'Redeemed'
-        : Number.isFinite(remainingUses)
-            ? `${remainingUses} use${remainingUses === 1 ? '' : 's'} left`
-            : 'Unlimited';
-
-    const titleColor = isPassLocked ? 'text-purple-like-gray' : isLocked ? 'text-brand-purple-soft' : 'text-brand-purple';
+    const copy = dealCopy(coupon);
+    const photo = photoFailed ? null : couponPhoto(coupon);
+    const statusLabel = isExpired ? 'Used up' : isPassLocked ? 'Unlock with a pass' : usesLeftLabel(remainingUses);
 
     return (
-        <View
-            className={`rounded-card border ${isPassLocked ? 'border-purple-20 bg-brand-cream-soft' : 'border-brand-tan bg-white'}`}
-            style={isPassLocked ? undefined : CARD_SHADOW}
-        >
-            <Pressable
+        <View>
+            <RaisedPressable
                 onPress={handlePress}
                 accessibilityRole="button"
-                accessibilityLabel={`${coupon.vendor}. ${coupon.offer}. ${isPassLocked ? 'Locked' : usesLabel}`}
+                accessibilityLabel={[copy.business, copy.headline, copy.description, statusLabel].filter(Boolean).join('. ')}
                 accessibilityHint={isExpired ? 'Shows when you used it' : isPassLocked ? 'Get a quarter pass to unlock' : 'Opens coupon details'}
-                className="flex-row items-center gap-4 rounded-card p-4 active:opacity-80"
+                radius={RADIUS.card}
+                shadow={!isExpired}
+                style={{ marginRight: SHADOW, marginBottom: SHADOW }}
+                faceStyle={{
+                    flexDirection: 'row',
+                    height: cardHeight,
+                    borderWidth: OUTLINE,
+                    borderColor: BRAND_INK,
+                    borderStyle: isExpired ? 'dashed' : 'solid',
+                    borderRadius: RADIUS.card,
+                    backgroundColor: isExpired ? 'transparent' : WHITE,
+                    overflow: 'hidden',
+                }}
             >
-                {/* logo tile; the logo fills it edge to edge, and vendors without an image get their initial on cream */}
+                {/* photo column; a lilac block when the business has no photo */}
                 <View
-                    className={`h-24 w-24 items-center justify-center overflow-hidden rounded-2xl ${hasImage ? 'bg-white' : 'bg-brand-cream-soft'}`}
-                    style={{ opacity: isPassLocked ? 0.4 : isLocked ? 0.6 : 1 }}
+                    style={{
+                        width: PHOTO_WIDTH,
+                        backgroundColor: BRAND_LILAC,
+                        borderRightWidth: OUTLINE,
+                        borderRightColor: BRAND_INK,
+                        borderStyle: isExpired ? 'dashed' : 'solid',
+                        isolation: 'isolate',
+                    }}
                 >
-                    {hasImage ? (
+                    {photo ? (
                         <Image
-                            source={{ uri: coupon.image_url }}
-                            placeholder={{ blurhash: BLURHASH }}
-                            transition={200}
+                            source={photo}
                             contentFit="cover"
-                            onError={() => setImageFailed(true)}
-                            style={{ width: '100%', height: '100%', ...logoZoomStyle(coupon.vendor) }}
+                            transition={150}
+                            onError={() => setPhotoFailed(true)}
+                            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: isExpired ? 0.6 : 1 }}
                         />
-                    ) : (
-                        <Text className="font-display-bold text-4xl text-brand-purple">{coupon.vendor?.trim()?.[0]?.toUpperCase()}</Text>
-                    )}
+                    ) : null}
+                    {isExpired ? (
+                        <View
+                            pointerEvents="none"
+                            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#808080', mixBlendMode: 'saturation' }}
+                        />
+                    ) : null}
+                    <LogoBadge
+                        coupon={coupon}
+                        size={44}
+                        radius={12}
+                        padding={4}
+                        spent={isExpired}
+                        style={{ position: 'absolute', left: 8, bottom: 8 }}
+                    />
                 </View>
 
-                <View className={`flex-1 ${isSavingAvailable ? 'pr-8' : ''}`}>
-                    <Text className={`font-display text-xl leading-7 ${titleColor}`} numberOfLines={1}>
-                        {coupon.vendor}
-                    </Text>
-                    <Text
-                        className={`mt-0.5 font-body text-sm leading-5 ${isPassLocked ? 'text-purple-40' : isLocked ? 'text-brand-purple-soft' : 'text-brand-ink'}`}
+                <View style={{ flex: 1, minWidth: 0, paddingTop: 14, paddingHorizontal: 14, paddingBottom: 12 }}>
+                    {copy.business ? (
+                        <Text
+                            numberOfLines={1}
+                            style={{ paddingRight: isSavingAvailable ? 44 : 0, fontFamily: 'Figtree_700Bold', fontSize: 15, lineHeight: 20, color: BRAND_MUTED }}
+                        >
+                            {copy.business}
+                        </Text>
+                    ) : null}
+                    <Display
+                        size={26}
+                        color={isExpired ? BRAND_MUTED : BRAND_INK}
                         numberOfLines={2}
+                        style={{ marginTop: copy.business ? 4 : 0, paddingRight: isSavingAvailable ? 40 : 0 }}
                     >
-                        {coupon.offer}
-                    </Text>
-
-                    <View className="mt-2 flex-row flex-wrap items-center">
-                        {coupon.location ? (
-                            <>
-                                <Text className="font-body text-xs text-brand-purple-soft" numberOfLines={1}>{coupon.location}</Text>
-                                <View className="mx-2 h-1.5 w-1.5 rounded-full bg-brand-tan" />
-                            </>
+                        {copy.headline}
+                    </Display>
+                    {/* fills the space between headline and status; the description
+                        shows as many whole lines as fit (none when the headline
+                        took it all) instead of being cut mid-line */}
+                    <View
+                        style={{ flex: 1, minHeight: 0, marginTop: 5, overflow: 'hidden' }}
+                        onLayout={(event) => {
+                            const lines = Math.floor((event.nativeEvent.layout.height + 1) / (DESCRIPTION_LINE_HEIGHT * fontScale));
+                            setDescriptionLines(Math.max(0, lines));
+                        }}
+                    >
+                        {copy.description && descriptionLines > 0 ? (
+                            <Text
+                                numberOfLines={descriptionLines}
+                                style={{ fontFamily: 'Figtree_400Regular', fontSize: 15, lineHeight: DESCRIPTION_LINE_HEIGHT, color: BRAND_MUTED }}
+                            >
+                                {copy.description}
+                            </Text>
                         ) : null}
+                    </View>
+                    <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center' }}>
                         {isPassLocked ? (
-                            // the one bright element on a locked card: the way in to the paywall
-                            <View className="flex-row items-center rounded-full bg-brand-purple px-2.5 py-1">
-                                <Lock size={12} color={BRAND_CREAM} strokeWidth={2.5} />
-                                <Text className="ml-1 font-display-medium text-xs text-brand-cream">Unlock with a pass</Text>
-                            </View>
+                            <>
+                                <Icon name="lock" size={16} color={BRAND_INK} strokeWidth={2.25} />
+                                <Text style={{ marginLeft: 5, fontFamily: 'Figtree_700Bold', fontSize: 14, lineHeight: 20, color: BRAND_INK }}>
+                                    Unlock with a pass
+                                </Text>
+                            </>
                         ) : (
-                            <Text className="font-display text-xs text-brand-purple">{usesLabel}</Text>
+                            <UsesLeft remaining={isExpired ? 0 : remainingUses} />
                         )}
                     </View>
                 </View>
-            </Pressable>
+            </RaisedPressable>
 
             {isSavingAvailable ? (
-                <Pressable
+                <HeartButton
+                    saved={saved}
+                    vendor={coupon.vendor}
                     onPress={() => toggleSaved(coupon)}
-                    accessibilityRole="button"
-                    accessibilityLabel={saved ? `Remove ${coupon.vendor} from saved` : `Save ${coupon.vendor}`}
-                    accessibilityState={{ selected: saved }}
-                    hitSlop={4}
-                    className="absolute right-3 top-3 h-10 w-10 items-center justify-center rounded-full border"
-                    style={{ backgroundColor: 'white', borderColor: BRAND_CREAM, ...CARD_SHADOW }}
-                >
-                    <Heart
-                        size={18}
-                        color={saved ? BRAND_PURPLE : BRAND_PURPLE_SOFT}
-                        fill={saved ? BRAND_PURPLE : 'transparent'}
-                        strokeWidth={2.25}
-                    />
-                </Pressable>
+                    style={{ position: 'absolute', top: 10, right: 10 + SHADOW }}
+                />
             ) : null}
         </View>
     );

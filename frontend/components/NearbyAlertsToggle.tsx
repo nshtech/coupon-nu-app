@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, AppState, Linking, Switch, Text, View } from 'react-native';
-import { MapPin } from 'lucide-react-native';
-import { BRAND_CREAM, BRAND_PURPLE } from '@/constants/Colors';
+import { Alert, AppState, Linking } from 'react-native';
+import SettingsRow from '@/components/ui/SettingsRow';
+import Toggle from '@/components/ui/Toggle';
 import {
     disableNearbyAlerts,
     enableNearbyAlerts,
@@ -32,7 +32,7 @@ const DENIED_COPY: Record<Exclude<EnableResult, 'enabled'>, { title: string; mes
     },
 };
 
-export default function NearbyAlertsToggle() {
+export default function NearbyAlertsToggle({ divider }: { divider?: boolean }) {
     const [enabled, setEnabled] = useState(false);
     const [busy, setBusy] = useState(false);
     // permission prompts bounce the app through inactive -> active; don't let
@@ -93,26 +93,20 @@ export default function NearbyAlertsToggle() {
     };
 
     return (
-        <View className="mt-4 min-h-14 flex-row items-center rounded-card border border-brand-tan bg-white px-4 py-3">
-            <View className="h-9 w-9 items-center justify-center rounded-full bg-brand-cream">
-                <MapPin size={18} color={BRAND_PURPLE} />
-            </View>
-            <View className="ml-3 flex-1 pr-3">
-                <Text className="font-body-medium text-base text-brand-ink">Nearby deal alerts</Text>
-                <Text className="font-body text-xs text-brand-purple-soft">
-                    Get a heads-up when you walk past a spot with a deal
-                </Text>
-            </View>
-            <Switch
-                value={enabled}
-                onValueChange={onToggle}
-                disabled={busy}
-                trackColor={{ false: BRAND_CREAM, true: BRAND_PURPLE }}
-                ios_backgroundColor={BRAND_CREAM}
-                thumbColor="#fff"
-                accessibilityLabel="Nearby deal alerts"
-                accessibilityHint="Notifies you when you walk past a spot with a deal"
-            />
-        </View>
+        <SettingsRow
+            icon="location"
+            label="Nearby deal alerts"
+            note="Get a heads-up when you walk past a spot with a deal"
+            divider={divider}
+            right={
+                <Toggle
+                    value={enabled}
+                    onValueChange={onToggle}
+                    disabled={busy}
+                    accessibilityLabel="Nearby deal alerts"
+                    accessibilityHint="Notifies you when you walk past a spot with a deal"
+                />
+            }
+        />
     );
 }

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import WillieOnboarding from '@/components/WillieOnboarding';
+import { PlaceType } from '@/utils/couponFilters';
 
 // Shows the Willie intro once per account. Completion is stored on the
 // Supabase user (`user_metadata.onboarding_completed_at`), so it follows the
@@ -30,14 +31,22 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         }
     }, [user?.id]);
 
-    const finish = async () => {
+    // `interests` are the place types picked on the intro's question step,
+    // kept as `user_metadata.deal_interests` for personalising later; a replay
+    // that answers again overwrites them
+    const finish = async (interests?: PlaceType[]) => {
         setIsVisible(false);
-        if (!user || finishedUserId === user.id || user.user_metadata?.onboarding_completed_at) return;
-        setFinishedUserId(user.id);
+        if (!user) return;
+        const isFirstFinish = finishedUserId !== user.id && !user.user_metadata?.onboarding_completed_at;
 
-        const { error } = await supabase.auth.updateUser({
-            data: { onboarding_completed_at: new Date().toISOString() },
-        });
+        const data: Record<string, unknown> = {};
+        if (isFirstFinish) data.onboarding_completed_at = new Date().toISOString();
+        if (interests?.length) data.deal_interests = interests;
+        if (!Object.keys(data).length) return;
+        if (isFirstFinish) setFinishedUserId(user.id);
+
+        // updateUser merges these keys into the existing user_metadata
+        const { error } = await supabase.auth.updateUser({ data });
         if (error) console.error('Error saving onboarding completion:', error);
     };
 

@@ -1,9 +1,7 @@
-import { View, Text, Pressable, TouchableOpacity, Alert, Animated, StyleSheet, Easing, PanResponder, ScrollView, ActivityIndicator, AccessibilityInfo, useWindowDimensions } from 'react-native';
+import { View, Text, Pressable, Alert, Animated, StyleSheet, Easing, PanResponder, ScrollView, ActivityIndicator, AccessibilityInfo, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { usePreventRemove } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
-import { Check, Heart, X } from 'lucide-react-native';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,14 +10,32 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useUsage } from '@/contexts/UsageContext';
 import { useSavedCoupons } from '@/contexts/SavedCouponsContext';
+import { useCoupons } from '@/contexts/CouponsContext';
 import * as ScreenCapture from 'expo-screen-capture';
 import * as Haptics from 'expo-haptics';
 import PaywallScreen from '@/components/PaywallScreen';
-import { BRAND_INK, BRAND_PURPLE, BRAND_PURPLE_SOFT } from '@/constants/Colors';
-import { logoZoomStyle } from '@/utils/couponImages';
+import Display from '@/components/ui/Display';
+import HeartButton from '@/components/ui/HeartButton';
+import Icon from '@/components/ui/Icon';
+import LogoBadge from '@/components/ui/LogoBadge';
+import { Raised } from '@/components/ui/Raised';
+import { Ticket, TicketRow, TicketTear } from '@/components/ui/Ticket';
+import { DarkButton, PrimaryButton } from '@/components/ui/Button';
+import {
+  BRAND_CREAM,
+  BRAND_GREEN,
+  BRAND_INK,
+  BRAND_LILAC,
+  BRAND_MUTED,
+  OUTLINE,
+  RADIUS,
+  SHADOW_SM,
+  WHITE,
+} from '@/constants/Colors';
+import { couponPhoto } from '@/utils/couponImages';
+import { dealCopy } from '@/utils/dealCopy';
 import { getPlaceTypeLabel } from '@/utils/couponFilters';
 
-const BLURHASH = '|rF?hV%2WCj[ayj[a|j[az_3fQjZa|j[azf6fQfQfQIpWBj[ayj[a|fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[ayfQfQpwj[fQjEIpayfQj[a|fQjuey';
 
 // how long a used coupon stays valid on screen for the cashier
 const REDEMPTION_WINDOW_MS = 2 * 60 * 1000;
@@ -29,15 +45,18 @@ const UNLIMITED_COOLDOWN_LABEL = '1 hour';
 const OPEN_DURATION_MS = 280;
 const CLOSE_DURATION_MS = 220;
 const DRAG_CLOSE_DISTANCE = 120;
+const PHOTO_HEIGHT = 172;
+// ink at 60%
+const SCRIM = 'rgba(34, 16, 61, 0.6)';
 
 // Presented as a transparent modal over the tabs (see app/_layout.tsx) and
-// drawn as a bottom sheet. The route and its params are unchanged: `coupon` is
-// the JSON-serialized coupon row, `usedAt` opens a read-only usage receipt.
+// drawn as a bottom sheet. Params: `couponId`, and `usedAt` to open a read-only
+// usage receipt.
 export default function CouponDetail() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const usedAt = typeof params.usedAt === 'string' ? params.usedAt : undefined;
   const { user } = useAuth();
+  const { allCoupons, isLoading: isCouponsLoading } = useCoupons();
   const { isSubscribed, isSubscriptionLoading } = useSubscription();
   const { userCouponToUsages, setUserCouponToUsages, userCouponToLastUsedAt, setUserCouponToLastUsedAt } = useUsage();
   const { isSaved, toggleSaved, isSavingAvailable } = useSavedCoupons();
@@ -55,6 +74,8 @@ export default function CouponDetail() {
   const progress = useRef(new Animated.Value(0)).current;
   const dragY = useRef(new Animated.Value(0)).current;
   const isClosing = useRef(false);
+  // 1 = full redemption window left, 0 = expired; drives the bar under the countdown
+  const drain = useRef(new Animated.Value(1)).current;
 
   // a used coupon is the cashier's proof, so only Done can dismiss it
   const canDismiss = !isRedeeming && !isActivated;
@@ -138,6 +159,16 @@ export default function CouponDetail() {
     }
   }, [isActivated, newExpirationDate, close]);
 
+  // the bar drains in step with the countdown
+  useEffect(() => {
+    if (!isActivated || !newExpirationDate) return;
+    const remaining = Math.max(0, new Date(newExpirationDate).getTime() - Date.now());
+    drain.setValue(remaining / REDEMPTION_WINDOW_MS);
+    const animation = Animated.timing(drain, { toValue: 0, duration: remaining, easing: Easing.linear, useNativeDriver: false });
+    animation.start();
+    return () => animation.stop();
+  }, [isActivated, newExpirationDate, drain]);
+
   // // anti-screenshots
   // useEffect(() => {
   //   ScreenCapture.preventScreenCaptureAsync();
@@ -148,37 +179,32 @@ export default function CouponDetail() {
   //   };
   // }, []);
 
-  // Parse the coupon data from the params with simple error handling
-  let coupon = null;
-  let parseError = null;
-
-  try {
-    if (params.coupon) {
-      coupon = JSON.parse(params.coupon as string);
-    } else {
-      parseError = 'No coupon data provided';
-    }
-  } catch (error) {
-    console.error('Error parsing coupon data:', error);
-    console.error('Raw params:', params);
-
-    if (error instanceof SyntaxError) {
-      parseError = 'Invalid JSON format in coupon data';
-    } else {
-      parseError = 'Failed to load coupon data';
-    }
-  }
+  // The route carries only the coupon's id; the coupon itself comes from the list
+  // loaded from Supabase. Never render a coupon taken from route params: any
+  // willieswallet:// link can set them, and could put a made-up vendor and offer
+  // on a genuine "You're all set!" screen.
+  const couponIdParam = typeof params.couponId === 'string' ? params.couponId : undefined;
+  const coupon: any = couponIdParam
+    ? allCoupons.find(item => String(item.coupon_id) === couponIdParam) ?? null
+    : null;
+  const isCouponLoading = !coupon && !!couponIdParam && isCouponsLoading;
+  const parseError = coupon || isCouponLoading ? null : couponIdParam ? 'Coupon not found' : 'No coupon data provided';
+  // a receipt only for a redemption this account actually made
+  const usedAt =
+    coupon && typeof params.usedAt === 'string' && params.usedAt === userCouponToLastUsedAt.get(coupon.coupon_id)
+      ? params.usedAt
+      : undefined;
 
   // gate coupon usage behind the paywall — browsing the list stays free
   if (!parseError && coupon && !isSubscriptionLoading && !isSubscribed && !usedAt) {
     return (
-      <View className="flex-1 bg-brand-cream-soft">
+      <View style={{ flex: 1, backgroundColor: BRAND_CREAM }}>
         <PaywallScreen onClose={() => router.back()} />
       </View>
     );
   }
 
-  const formatExpirationDate = (dateString: string, displayType: "date" | "timestamp" | "time") => {
+  const formatExpirationDate = (dateString: string, displayType: "date" | "timestamp" | "redeemed") => {
     try {
       const date = new Date(dateString);
 
@@ -192,17 +218,16 @@ export default function CouponDetail() {
           month: 'long',
           day: 'numeric'
         });
-      } else if (displayType === "time") {
-        return date.toLocaleTimeString('en-US', {
+      } else if (displayType === "redeemed") {
+        // day and time to the minute, e.g. "Nov 10, 12:09 PM" (formatted in two
+        // parts because Hermes joins a combined date and time with "at")
+        const day = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const time = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        return `${day}, ${time}`;
+      } else {
+        return date.toLocaleString('en-US', {
           hour: 'numeric',
           minute: '2-digit',
-          second: '2-digit',
-        });
-      } else {
-        return date.toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
           year: 'numeric',
           month: 'long',
           day: 'numeric'
@@ -304,23 +329,74 @@ export default function CouponDetail() {
     dragY
   );
 
+  const copy = coupon ? dealCopy(coupon) : null;
+  const photo = coupon ? couponPhoto(coupon) : null;
+  const placeType = coupon ? getPlaceTypeLabel(coupon) : null;
+  // the deal sheet and the usage receipt open on the photo; the redeemed state does not
+  const showPhoto = !parseError && !!coupon && !isSubscriptionLoading && !isActivated;
+
+  const renderPhoto = () => (
+    // tall enough for the logo badge hanging 26pt below the photo
+    <View style={{ height: PHOTO_HEIGHT + 26 }}>
+      <View
+        style={{
+          height: PHOTO_HEIGHT,
+          borderRadius: 20,
+          borderWidth: OUTLINE,
+          borderColor: BRAND_INK,
+          backgroundColor: BRAND_LILAC,
+          overflow: 'hidden',
+        }}
+      >
+        {photo && !imageFailed ? (
+          <Image
+            source={photo}
+            contentFit="cover"
+            transition={150}
+            onError={() => setImageFailed(true)}
+            style={{ flex: 1 }}
+            accessible={false}
+          />
+        ) : null}
+      </View>
+      <LogoBadge coupon={coupon} size={64} radius={16} padding={6} style={{ position: 'absolute', left: 14, top: PHOTO_HEIGHT - 38 }} />
+      {canDismiss && isSavingAvailable ? (
+        <HeartButton
+          saved={isSaved(coupon.coupon_id)}
+          vendor={coupon.vendor}
+          onPress={() => toggleSaved(coupon)}
+          style={{ position: 'absolute', top: 10, right: 10 }}
+        />
+      ) : null}
+    </View>
+  );
+
   const renderContent = () => {
+    if (isCouponLoading) {
+      return (
+        <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+          <ActivityIndicator color={BRAND_INK} />
+          <Text style={{ marginTop: 12, fontFamily: 'Figtree_700Bold', fontSize: 17, color: BRAND_MUTED }}>Loading...</Text>
+        </View>
+      );
+    }
+
     if (parseError || !coupon) {
       return (
-        <View className="items-center py-6">
-          <Text className="mb-6 text-center font-display text-2xl text-brand-purple">
+        <View style={{ alignItems: 'center', paddingVertical: 24 }}>
+          <Display size={26} style={{ marginBottom: 24, textAlign: 'center' }}>
             {parseError || 'Coupon not found'}
-          </Text>
-          <PrimaryButton label="Go Back" onPress={close} />
+          </Display>
+          <PrimaryButton label="Go Back" onPress={close} style={{ alignSelf: 'stretch' }} />
         </View>
       );
     }
 
     if (isSubscriptionLoading) {
       return (
-        <View className="items-center py-10">
-          <ActivityIndicator color={BRAND_PURPLE_SOFT} />
-          <Text className="mt-3 font-display text-lg text-brand-purple-soft">Loading...</Text>
+        <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+          <ActivityIndicator color={BRAND_INK} />
+          <Text style={{ marginTop: 12, fontFamily: 'Figtree_700Bold', fontSize: 17, color: BRAND_MUTED }}>Loading...</Text>
         </View>
       );
     }
@@ -329,32 +405,87 @@ export default function CouponDetail() {
       const minutes = Math.floor(secondsLeft / 60);
       const seconds = String(secondsLeft % 60).padStart(2, '0');
       return (
-        <View className="items-center pt-2" accessibilityLiveRegion="polite">
-          <View className="h-28 w-28 items-center justify-center rounded-full border border-brand-tan bg-brand-cream">
-            <Check size={52} color={BRAND_PURPLE} strokeWidth={2.5} />
-          </View>
-          <Text accessibilityRole="header" className="mt-5 font-display text-3xl text-brand-purple">You're all set!</Text>
-          <Text className="mt-1 text-center font-body text-base text-brand-ink">
-            Show this screen to the cashier at {coupon.vendor}.
+        <View accessibilityLiveRegion="polite">
+          <Raised radius={34} offset={SHADOW_SM} style={{ alignSelf: 'center', marginTop: 6 }}>
+            <View
+              style={{
+                width: 68,
+                height: 68,
+                borderRadius: 34,
+                borderWidth: OUTLINE,
+                borderColor: BRAND_INK,
+                backgroundColor: BRAND_GREEN,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Icon name="check" size={36} color={WHITE} strokeWidth={3.5} />
+            </View>
+          </Raised>
+          <Display accessibilityRole="header" size={38} style={{ marginTop: 16, textAlign: 'center' }}>
+            You're all set!
+          </Display>
+          {/* the business name always starts a line of its own (CLAUDE.md, Styling) */}
+          <Text style={{ marginTop: 8, textAlign: 'center', fontFamily: 'Figtree_400Regular', fontSize: 16, lineHeight: 22, color: BRAND_MUTED }}>
+            Show this screen to the cashier at{'\n'}
+            <Text style={{ fontFamily: 'Figtree_700Bold', color: BRAND_INK }}>{coupon.vendor}</Text>.
           </Text>
 
-          <View className="mt-5 w-full rounded-2xl border border-brand-tan bg-white px-4 py-4">
-            <Text className="text-center font-display text-lg text-brand-purple">{coupon.offer}</Text>
-            <View className="mt-3 flex-row justify-between border-t border-brand-cream pt-3">
-              <Text className="font-body-medium text-sm text-brand-purple-soft">Redeemed at</Text>
-              <Text className="font-body-medium text-sm text-brand-ink">
-                {formatExpirationDate(userCouponToLastUsedAt.get(coupon.coupon_id) || '', "time")}
-              </Text>
+          <Ticket style={{ marginTop: 18 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 18 }}>
+              <LogoBadge coupon={coupon} size={60} radius={14} padding={5} />
+              <View style={{ flex: 1, marginLeft: 14 }}>
+                <Display size={32} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.6}>
+                  {copy?.headline}
+                </Display>
+                {copy?.description ? (
+                  <Text numberOfLines={3} style={{ marginTop: 4, fontFamily: 'Figtree_400Regular', fontSize: 15, lineHeight: 20, color: BRAND_MUTED }}>
+                    {copy.description}
+                  </Text>
+                ) : null}
+              </View>
             </View>
-            <View className="mt-2 flex-row justify-between">
-              <Text className="font-body-medium text-sm text-brand-purple-soft">Valid for</Text>
-              <Text className="font-display text-base text-brand-purple" accessibilityLabel={`${minutes} minutes ${secondsLeft % 60} seconds`}>
-                {minutes}:{seconds}
-              </Text>
+            <TicketTear />
+            <View style={{ paddingTop: 14, paddingHorizontal: 18, paddingBottom: 18 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                <View>
+                  <Text style={{ fontFamily: 'Figtree_600SemiBold', fontSize: 14, color: BRAND_MUTED }}>Valid for</Text>
+                  <Display
+                    size={56}
+                    color={BRAND_GREEN}
+                    style={{ marginTop: 4, fontVariant: ['tabular-nums'] }}
+                    accessibilityLabel={`${minutes} minutes ${secondsLeft % 60} seconds`}
+                  >
+                    {minutes}:{seconds}
+                  </Display>
+                </View>
+                <View style={{ alignItems: 'flex-end', paddingBottom: 6 }}>
+                  <Text style={{ fontFamily: 'Figtree_600SemiBold', fontSize: 14, color: BRAND_MUTED }}>Redeemed</Text>
+                  <Text style={{ fontFamily: 'Figtree_700Bold', fontSize: 16, color: BRAND_INK }}>
+                    {formatExpirationDate(userCouponToLastUsedAt.get(coupon.coupon_id) || '', "redeemed")}
+                  </Text>
+                </View>
+              </View>
+              {/* drains with the countdown */}
+              <View
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+                style={{ marginTop: 10, height: 12, borderRadius: 6, borderWidth: OUTLINE, borderColor: BRAND_INK, backgroundColor: WHITE, overflow: 'hidden' }}
+              >
+                <Animated.View
+                  style={{
+                    height: '100%',
+                    width: drain.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
+                    backgroundColor: BRAND_GREEN,
+                    borderRightWidth: OUTLINE,
+                    borderRightColor: BRAND_INK,
+                  }}
+                />
+              </View>
             </View>
-          </View>
+          </Ticket>
 
-          <PrimaryButton label="Done" onPress={close} className="mt-6" />
+          <DarkButton label="Done" onPress={close} style={{ marginTop: 20 }} />
         </View>
       );
     }
@@ -364,58 +495,68 @@ export default function CouponDetail() {
     const usesLabel = coupon.usage_limit === 0
       ? 'Unlimited, once an hour'
       : `${Math.max(0, coupon.usage_limit - couponUses)} of ${coupon.usage_limit} use${coupon.usage_limit === 1 ? '' : 's'} left`;
+    const businessLine = [copy?.business, placeType].filter(Boolean).join(' · ');
 
     return (
       <>
-        <View className="flex-row items-center pr-24">
-          <View className="h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-brand-tan bg-brand-cream">
-            {coupon.image_url && !imageFailed ? (
-              <Image
-                source={{ uri: coupon.image_url }}
-                placeholder={{ blurhash: BLURHASH }}
-                transition={200}
-                contentFit="cover"
-                onError={() => setImageFailed(true)}
-                style={{ width: '100%', height: '100%', ...logoZoomStyle(coupon.vendor) }}
-              />
-            ) : (
-              <Ionicons name="pricetag-outline" size={30} color={BRAND_PURPLE_SOFT} />
-            )}
-          </View>
-          <View className="ml-4 flex-1">
-            {getPlaceTypeLabel(coupon) ? (
-              <Text className="font-display-medium text-xs uppercase tracking-widest text-brand-purple-soft">{getPlaceTypeLabel(coupon)}</Text>
-            ) : null}
-            <Text accessibilityRole="header" className="font-display text-2xl leading-8 text-brand-purple">{coupon.vendor}</Text>
-            {coupon.location ? (
-              <Text className="font-body text-sm text-brand-purple-soft">{coupon.location}</Text>
-            ) : null}
-          </View>
+        <View style={{ marginTop: 12, marginHorizontal: 4 }}>
+          {businessLine ? (
+            <Text style={{ fontFamily: 'Figtree_700Bold', fontSize: 17, color: BRAND_MUTED }}>{businessLine}</Text>
+          ) : null}
+          <Display
+            accessibilityRole="header"
+            size={46}
+            numberOfLines={2}
+            adjustsFontSizeToFit
+            minimumFontScale={0.6}
+            style={{ marginTop: businessLine ? 6 : 0 }}
+          >
+            {copy?.headline}
+          </Display>
+          {copy?.description ? (
+            <Text style={{ marginTop: 8, fontFamily: 'Figtree_400Regular', fontSize: 17, lineHeight: 24, color: BRAND_MUTED }}>
+              {copy.description}
+            </Text>
+          ) : null}
+          {coupon.location ? (
+            <Text style={{ marginTop: 4, fontFamily: 'Figtree_500Medium', fontSize: 15, color: BRAND_MUTED }}>{coupon.location}</Text>
+          ) : null}
         </View>
 
-        <Text className="mt-5 font-body text-lg leading-7 text-brand-ink">{coupon.offer}</Text>
-
-        <View className="mt-5 rounded-2xl border border-brand-tan bg-white px-4 py-1">
+        <Ticket style={{ marginTop: 18 }}>
           {usedAt ? (
             <>
-              <DetailRow label="Used on" value={formatExpirationDate(usedAt, "timestamp")} />
-              <DetailRow
+              <TicketRow label="Used on" value={formatExpirationDate(usedAt, "timestamp")} />
+              <TicketTear />
+              <TicketRow
                 label="Expired on"
                 value={formatExpirationDate(new Date(new Date(usedAt).getTime() + REDEMPTION_WINDOW_MS).toISOString(), "timestamp")}
-                divider
               />
             </>
           ) : (
             <>
-              <DetailRow label="Expires" value={formatExpirationDate(coupon.expiration_date, "date")} />
-              <DetailRow label="Uses" value={usesLabel} divider />
+              <TicketRow label="Expires" value={formatExpirationDate(coupon.expiration_date, "date")} />
+              <TicketTear />
+              <TicketRow label="Uses" value={usesLabel} />
             </>
           )}
-        </View>
+        </Ticket>
 
         {usedAt ? (
-          <View className="mt-6 min-h-14 w-full justify-center rounded-full bg-brand-cream">
-            <Text className="text-center font-display text-xl text-brand-purple">Redeemed!</Text>
+          // spent, so flat: dashed outline, no shadow
+          <View
+            style={{
+              marginTop: 20,
+              minHeight: 58,
+              borderRadius: 29,
+              borderWidth: OUTLINE,
+              borderStyle: 'dashed',
+              borderColor: BRAND_INK,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ fontFamily: 'Figtree_700Bold', fontSize: 18, color: BRAND_MUTED }}>Redeemed!</Text>
           </View>
         ) : (
           <>
@@ -424,12 +565,12 @@ export default function CouponDetail() {
               onPress={handleUseCoupon}
               disabled={isRedeeming || isUsedUp}
               loading={isRedeeming}
-              className="mt-6"
+              style={{ marginTop: 20 }}
+              accessibilityHint="Only tap this at the register"
             />
-            <Text className="mt-3 text-center font-body-bold text-sm leading-5 text-brand-purple-soft">
+            <Text style={{ marginTop: 10, marginHorizontal: 8, textAlign: 'center', fontFamily: 'Figtree_500Medium', fontSize: 14, lineHeight: 20, color: BRAND_MUTED }}>
               {/* non-breaking space keeps "2 minutes" together on one line */}
-              Only tap this at the register. Once used, the coupon stays valid for 2{'\u00A0'}minutes — show it to the cashier.
-              {coupon.usage_limit === 0 ? ` Then you'll have to wait ${UNLIMITED_COOLDOWN_LABEL.replace(' ', '\u00A0')} to use it again.` : ''}
+              Once used, the coupon stays valid for 2{' '}minutes.
             </Text>
           </>
         )}
@@ -438,11 +579,11 @@ export default function CouponDetail() {
   };
 
   return (
-    <View className="flex-1 justify-end">
-      {/* dimmed page behind the sheet */}
-      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: `${BRAND_INK}80`, opacity: progress }]}>
+    <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+      {/* dimmed page behind the sheet; tapping it closes the sheet */}
+      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: SCRIM, opacity: progress }]}>
         <Pressable
-          className="flex-1"
+          style={{ flex: 1 }}
           onPress={canDismiss ? close : undefined}
           accessibilityRole="button"
           accessibilityLabel="Close coupon"
@@ -457,80 +598,47 @@ export default function CouponDetail() {
         style={{ transform: [{ translateY: sheetTranslateY }] }}
       >
         <View
-          className="rounded-t-sheet border-t border-brand-tan bg-brand-cream-soft"
-          style={{ maxHeight: windowHeight * 0.92 }}
+          style={{
+            maxHeight: windowHeight * 0.92,
+            // the side outlines sit just off screen so only the top edge and corners show
+            marginHorizontal: -OUTLINE,
+            backgroundColor: BRAND_CREAM,
+            borderTopLeftRadius: RADIUS.sheet,
+            borderTopRightRadius: RADIUS.sheet,
+            borderTopWidth: OUTLINE,
+            borderLeftWidth: OUTLINE,
+            borderRightWidth: OUTLINE,
+            borderColor: BRAND_INK,
+          }}
         >
-          {/* drag handle — swipe down to dismiss */}
-          <View {...panResponder.panHandlers} className="items-center pb-2 pt-3">
-            <View className="h-1.5 w-11 rounded-full bg-brand-tan" />
+          {/* swipe down here to dismiss: the grabber, and the photo on the deal sheet */}
+          <View {...panResponder.panHandlers} style={{ paddingHorizontal: 16 }}>
+            <View style={{ alignItems: 'center', paddingTop: 10, paddingBottom: 12 }}>
+              <View style={{ width: 44, height: 5, borderRadius: 3, backgroundColor: BRAND_INK }} />
+            </View>
+            {showPhoto ? renderPhoto() : null}
           </View>
-
-          {canDismiss ? (
-            <TouchableOpacity
-              onPress={close}
-              accessibilityRole="button"
-              accessibilityLabel="Close"
-              className="absolute right-4 top-4 z-10 h-11 w-11 items-center justify-center rounded-full bg-brand-cream"
-            >
-              <X size={20} color={BRAND_PURPLE} />
-            </TouchableOpacity>
-          ) : null}
-
-          {canDismiss && coupon && isSavingAvailable ? (
-            <TouchableOpacity
-              onPress={() => toggleSaved(coupon)}
-              accessibilityRole="button"
-              accessibilityLabel={isSaved(coupon.coupon_id) ? `Remove ${coupon.vendor} from saved` : `Save ${coupon.vendor}`}
-              accessibilityState={{ selected: isSaved(coupon.coupon_id) }}
-              className="absolute right-[68px] top-4 z-10 h-11 w-11 items-center justify-center rounded-full bg-brand-cream"
-            >
-              <Heart
-                size={20}
-                color={BRAND_PURPLE}
-                fill={isSaved(coupon.coupon_id) ? BRAND_PURPLE : 'transparent'}
-              />
-            </TouchableOpacity>
-          ) : null}
 
           <ScrollView
             bounces={false}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: insets.bottom + 20 }}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 20 }}
           >
             {renderContent()}
           </ScrollView>
+
+          {isActivated ? (
+            // Willie naps on the sheet's top edge while the cashier looks
+            <Image
+              source={require('@/assets/images/willie/laying-down.png')}
+              contentFit="contain"
+              pointerEvents="none"
+              accessible={false}
+              style={{ position: 'absolute', right: 26, top: -67, width: 150, height: 104 }}
+            />
+          ) : null}
         </View>
       </Animated.View>
     </View>
-  );
-}
-
-function DetailRow({ label, value, divider }: { label: string; value: string; divider?: boolean }) {
-  return (
-    <View className={`flex-row items-center justify-between py-3 ${divider ? 'border-t border-brand-cream' : ''}`}>
-      <Text className="font-body-medium text-sm text-brand-purple-soft">{label}</Text>
-      <Text className="ml-4 flex-1 text-right font-body-medium text-sm text-brand-ink">{value}</Text>
-    </View>
-  );
-}
-
-function PrimaryButton({ label, onPress, disabled, loading, className = '' }: {
-  label: string;
-  onPress: () => void;
-  disabled?: boolean;
-  loading?: boolean;
-  className?: string;
-}) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      disabled={disabled}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: Boolean(disabled), busy: Boolean(loading) }}
-      className={`min-h-14 w-full flex-row items-center justify-center rounded-full bg-brand-purple ${disabled ? 'opacity-70' : ''} ${className}`}
-    >
-      {loading ? <ActivityIndicator color="#ffffff" style={{ marginRight: 8 }} /> : null}
-      <Text className="font-display text-xl text-brand-cream">{label}</Text>
-    </TouchableOpacity>
   );
 }

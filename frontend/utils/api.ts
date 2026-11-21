@@ -1,7 +1,12 @@
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
+// a hung request would leave Delete Account spinning forever
+const REQUEST_TIMEOUT_MS = 20000;
+
 export const deleteAccountAPI = async (accessToken: string) => {
-    
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
     try {
         const response = await fetch(`${API_BASE_URL}/api/delete-account`, {
             method: 'DELETE',
@@ -9,22 +14,19 @@ export const deleteAccountAPI = async (accessToken: string) => {
                 'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json',
             },
+            signal: controller.signal,
         });
-
-        console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            console.log('Error data:', errorData);
-            throw new Error(errorData.detail || 'Failed to delete account');
+            throw new Error(errorData.detail || `Failed to delete account (${response.status})`);
         }
 
-        const result = await response.json();
-        console.log('Delete account successful:', result);
-        return result;
+        return await response.json();
     } catch (error) {
-        console.error('Network error details:', error);
+        console.error('Delete account request failed:', error);
         throw error;
+    } finally {
+        clearTimeout(timeout);
     }
 };

@@ -1,17 +1,18 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Easing, View } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
-import { BRAND_TAN } from '@/constants/Colors';
+import { BRAND_INK, BRAND_LILAC, OUTLINE, RADIUS, SHADOW, WHITE } from '@/constants/Colors';
 
 // Skeleton placeholder laid over a coupon card while the list refreshes. It
-// covers the real card (the parent must be sized by the card) instead of
-// replacing it, so the list keeps its layout, and fades away when done.
+// covers the real card (the parent must be sized by the card, which leaves
+// SHADOW points on the right and bottom for its shadow) instead of replacing
+// it, so the list keeps its layout, and fades away when done.
 
 const VARIANTS = {
-  // CouponThumbnail: 96 px logo tile, category chip, title, offer, uses line
-  thumbnail: { radius: 24, padding: 16, tile: 96, tileRadius: 16, lines: [56, 140, '90%', '70%', 80] },
-  // CouponHistoryCard: 56 px logo tile, title, offer, used-on line
-  history: { radius: 16, padding: 12, tile: 56, tileRadius: 12, lines: [120, '85%', 150] },
+  // CouponThumbnail: 112 pt photo column, name, offer, description, uses line
+  thumbnail: { radius: RADIUS.card, column: 112, lines: [96, '80%', '90%', 72] },
+  // CouponHistoryCard: 60 pt logo, name, offer, used-on line
+  history: { radius: RADIUS.card, column: 0, lines: [120, 90, 150] },
 } as const;
 
 type CouponSkeletonProps = {
@@ -50,27 +51,27 @@ export default function CouponSkeleton({ visible, variant }: CouponSkeletonProps
       style={{
         position: 'absolute',
         top: 0,
-        right: 0,
-        bottom: 0,
         left: 0,
+        right: SHADOW,
+        bottom: SHADOW,
         flexDirection: 'row',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: BRAND_TAN,
-        backgroundColor: 'white',
+        borderWidth: OUTLINE,
+        borderColor: BRAND_INK,
+        backgroundColor: WHITE,
         borderRadius: shape.radius,
-        padding: shape.padding,
+        overflow: 'hidden',
         opacity: fade,
       }}
     >
-      <Animated.View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', opacity: pulse }}>
-        <View
-          className="bg-brand-cream"
-          style={{ width: shape.tile, height: shape.tile, borderRadius: shape.tileRadius }}
-        />
-        <View style={{ flex: 1, marginLeft: shape.padding, gap: 8 }}>
+      <Animated.View style={{ flex: 1, flexDirection: 'row', opacity: pulse }}>
+        {shape.column ? (
+          <View style={{ width: shape.column, backgroundColor: BRAND_LILAC, borderRightWidth: OUTLINE, borderRightColor: BRAND_INK }} />
+        ) : (
+          <View style={{ width: 60, height: 60, margin: 12, borderRadius: 14, backgroundColor: BRAND_LILAC }} />
+        )}
+        <View style={{ flex: 1, padding: 14, gap: 10, justifyContent: 'center' }}>
           {shape.lines.map((width, index) => (
-            <View key={index} className="h-3 rounded-full bg-brand-cream" style={{ width }} />
+            <View key={index} style={{ height: 12, borderRadius: 6, width, backgroundColor: BRAND_LILAC }} />
           ))}
         </View>
       </Animated.View>

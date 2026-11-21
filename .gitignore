@@ -32,8 +32,11 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
-.env*.local
+# local env files: .env and every variant (.env.production, .env.local, ...).
+# Only a values-free template may be committed.
+.env
+.env.*
+!.env.example
 
 # typescript
 *.tsbuildinfo
@@ -57,14 +60,38 @@ expo-env.d.ts
 
 
 
+## build outputs (eas build --local, Xcode archives, jest --coverage)
+
+*.ipa
+*.apk
+*.aab
+*.dSYM.zip
+coverage/
+
+
 ## backend
 
 .venv/
-.env
-
 __pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
 
 
 
 
+
+## editor / local tooling
+
+# Cursor debug logs
+.cursor/
+
+# JetBrains, vim swap files, stray logs
+.idea/
+*.swp
+*.log
+
+# Supabase CLI workspace (local config + stale schema dump); schema lives in backend/sql/
+supabase/

@@ -1,31 +1,31 @@
-import { Text, View, TouchableOpacity } from 'react-native';
+import { Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import { useAuth } from '@/contexts/AuthContext';
-import { ShieldX } from 'lucide-react-native';
-import { BRAND_PURPLE } from '@/constants/Colors';
+import { BRAND_CREAM, BRAND_MUTED } from '@/constants/Colors';
+import Display from '@/components/ui/Display';
+import { DarkButton } from '@/components/ui/Button';
 
 export default function RestrictedDomainScreen() {
   const { logout } = useAuth();
 
   return (
-    <View className="flex-1 items-center justify-center bg-brand-cream-soft px-6">
-      <View className="h-32 w-32 items-center justify-center rounded-full bg-brand-cream">
-        <ShieldX size={64} color={BRAND_PURPLE} strokeWidth={1.8} />
-      </View>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, backgroundColor: BRAND_CREAM }}>
+      <Image
+        source={require('@/assets/images/willie/boba-silly.png')}
+        contentFit="contain"
+        accessible={false}
+        style={{ width: 150, height: 195 }}
+      />
 
-      <Text className="mt-8 text-center font-display text-3xl text-brand-purple">
+      <Display accessibilityRole="header" size={38} style={{ marginTop: 24, textAlign: 'center' }}>
         Wildcats only!
-      </Text>
-      <Text className="mt-3 px-4 text-center font-body text-base text-brand-ink">
+      </Display>
+      <Text style={{ marginTop: 12, paddingHorizontal: 16, textAlign: 'center', fontFamily: 'Figtree_400Regular', fontSize: 16, lineHeight: 23, color: BRAND_MUTED }}>
         Willie's Wallet is for Northwestern students. Please sign in with your
         Northwestern University Google account.
       </Text>
 
-      <TouchableOpacity
-        className="mt-10 w-full max-w-xs rounded-full bg-brand-purple px-10 py-4 active:opacity-80"
-        onPress={logout}
-      >
-        <Text className="text-center font-display text-lg text-brand-cream">Log Out</Text>
-      </TouchableOpacity>
+      <DarkButton label="Log Out" onPress={logout} style={{ marginTop: 32, alignSelf: 'stretch', marginHorizontal: 24 }} />
     </View>
   );
 }
