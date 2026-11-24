@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import { AccessibilityInfo, Alert } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { supabase } from '@/utils/supabase';
@@ -22,12 +22,14 @@ const MISSING_TABLE_CODES = new Set(['PGRST205', '42P01']);
 
 export function SavedCouponsProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();
+    // keyed on the id, not the user object: a token refresh is not a reason to re-fetch
+    const userId = user?.id ?? null;
     const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
     const [isSavingAvailable, setIsSavingAvailable] = useState<boolean>(true);
     const pendingIds = useRef<Set<number>>(new Set());
 
     useEffect(() => {
-        if (!user) {
+        if (!userId) {
             setSavedIds(new Set());
             return;
         }
@@ -36,7 +38,7 @@ export function SavedCouponsProvider({ children }: { children: ReactNode }) {
         supabase
             .from('saved_coupons')
             .select('coupon_id')
-            .eq('user_id', user.id)
+            .eq('user_id', userId)
             .then(({ data, error }) => {
                 if (cancelled) return;
                 if (error) {
@@ -49,13 +51,13 @@ export function SavedCouponsProvider({ children }: { children: ReactNode }) {
             });
 
         return () => { cancelled = true; };
-    }, [user]);
+    }, [userId]);
 
     const isSaved = useCallback((couponId: number) => savedIds.has(couponId), [savedIds]);
 
     // flips the heart right away, then puts it back if the write fails
     const toggleSaved = useCallback(async (coupon: any) => {
-        if (!user || !isSavingAvailable) return;
+        if (!userId || !isSavingAvailable) return;
 
         const couponId: number = coupon.coupon_id;
         // a second tap before the first write lands would act on stale state
@@ -78,8 +80,8 @@ export function SavedCouponsProvider({ children }: { children: ReactNode }) {
         let error;
         try {
             ({ error } = wasSaved
-                ? await supabase.from('saved_coupons').delete().eq('user_id', user.id).eq('coupon_id', couponId)
-                : await supabase.from('saved_coupons').insert({ user_id: user.id, coupon_id: couponId }));
+                ? await supabase.from('saved_coupons').delete().eq('user_id', userId).eq('coupon_id', couponId)
+                : await supabase.from('saved_coupons').insert({ user_id: userId, coupon_id: couponId }));
         } finally {
             pendingIds.current.delete(couponId);
         }
@@ -94,10 +96,15 @@ export function SavedCouponsProvider({ children }: { children: ReactNode }) {
         AccessibilityInfo.announceForAccessibility(
             wasSaved ? `Removed ${coupon.vendor} from saved` : `Saved ${coupon.vendor}`
         );
-    }, [user, isSavingAvailable, savedIds]);
+    }, [userId, isSavingAvailable, savedIds]);
+
+    const contextValue = useMemo(
+        () => ({ savedIds, isSavingAvailable, isSaved, toggleSaved }),
+        [savedIds, isSavingAvailable, isSaved, toggleSaved]
+    );
 
     return (
-        <SavedCouponsContext.Provider value={{ savedIds, isSavingAvailable, isSaved, toggleSaved }}>
+        <SavedCouponsContext.Provider value={contextValue}>
             {children}
         </SavedCouponsContext.Provider>
     );

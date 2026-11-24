@@ -1,18 +1,37 @@
 import React from 'react';
+import { Text } from 'react-native';
 import { Tabs } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {
-  BRAND_CREAM_SOFT,
-  BRAND_PURPLE,
-  BRAND_PURPLE_SOFT,
-  BRAND_TAN,
-} from '@/constants/Colors';
+import { BRAND_CREAM, BRAND_INK, BRAND_MUTED, OUTLINE } from '@/constants/Colors';
+import TabIcon, { TabIconName } from '@/components/ui/TabIcon';
 
-import { Compass, Heart, TicketCheck, UserRound } from 'lucide-react-native';
+const tabLabel = (label: string) =>
+  function TabLabel({ focused }: { focused: boolean }) {
+    return (
+      <Text
+        style={{
+          marginTop: 2,
+          fontFamily: focused ? 'Figtree_700Bold' : 'Figtree_600SemiBold',
+          fontSize: 12,
+          color: focused ? BRAND_INK : BRAND_MUTED,
+        }}
+      >
+        {label}
+      </Text>
+    );
+  };
+
+const tabIcon = (name: TabIconName) =>
+  function Icon({ focused }: { focused: boolean }) {
+    return <TabIcon name={name} focused={focused} />;
+  };
 
 // Each tab draws its own BrandHeader, so the navigator header stays hidden.
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       // tick only when the tab actually changes, not on a re-tap of the current one
@@ -23,44 +42,50 @@ export default function TabLayout() {
       })}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: BRAND_PURPLE,
-        tabBarInactiveTintColor: BRAND_PURPLE_SOFT,
+        tabBarActiveTintColor: BRAND_INK,
+        tabBarInactiveTintColor: BRAND_MUTED,
         tabBarStyle: {
-          backgroundColor: BRAND_CREAM_SOFT,
-          borderTopColor: BRAND_TAN,
-          borderTopWidth: 1,
+          backgroundColor: BRAND_CREAM,
+          borderTopColor: BRAND_INK,
+          borderTopWidth: OUTLINE,
+          height: 58 + insets.bottom,
+          paddingTop: 8,
+          // no blurred shadow above the bar, just the ink line
+          elevation: 0,
+          shadowOpacity: 0,
         },
-        tabBarLabelStyle: {
-          fontFamily: 'Fredoka_500Medium',
-          fontSize: 11,
-        },
+        tabBarIconStyle: { width: 32, height: 28 },
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Discover',
-          tabBarIcon: ({ color }) => <Compass size={24} color={color} />,
+          tabBarLabel: tabLabel('Discover'),
+          tabBarIcon: tabIcon('discover'),
         }}
       />
       <Tabs.Screen
         name="saved"
         options={{
           title: 'Saved',
-          tabBarIcon: ({ color }) => <Heart size={24} color={color} />,
+          tabBarLabel: tabLabel('Saved'),
+          tabBarIcon: tabIcon('saved'),
         }}
       />
       <Tabs.Screen
         name="used"
         options={{
           title: 'Used',
-          tabBarIcon: ({ color }) => <TicketCheck size={24} color={color} />,
+          tabBarLabel: tabLabel('Used'),
+          tabBarIcon: tabIcon('used'),
         }}
       />
       <Tabs.Screen
         name="my-account"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color }) => <UserRound size={24} color={color} />,
+          tabBarLabel: tabLabel('Profile'),
+          tabBarIcon: tabIcon('profile'),
         }}
       />
     </Tabs>

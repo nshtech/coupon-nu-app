@@ -13,6 +13,7 @@ export default function Discover() {
     <CouponListScreen
       headline={headline}
       coupons={activeCoupons}
+      countLabel={count => `deal${count === 1 ? '' : 's'} this quarter`}
       emptyState={{
         title: 'No active coupons',
         message: 'Check back soon for new Evanston deals!',

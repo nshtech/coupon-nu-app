@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Button, TouchableOpacity, View, Text, Pressable, Image } from 'react-native';
-import { useAuth } from '@/contexts/AuthContext';
+import React from 'react';
+import { View, Text, Image } from 'react-native';
+import { PrimaryButton } from '@/components/ui/Button';
+import { BRAND_CREAM, BRAND_INK, BRAND_MUTED } from '@/constants/Colors';
 import * as AuthSession from 'expo-auth-session';
-import { useAuthRequest } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '@/utils/supabase';
-import { router } from 'expo-router';
-import { useSubscription } from '@/contexts/SubscriptionContext';
 import { openPrivacyPolicy, openTermsOfService } from '@/utils/pdfViewer';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -14,19 +12,12 @@ WebBrowser.maybeCompleteAuthSession();
 
 export default function LogInScreen() {
 
-
-    const { login } = useAuth();
-
-    const { unsubscribe } = useSubscription();
-
     const redirectUri = AuthSession.makeRedirectUri(
         {scheme: 'willieswallet', path: 'auth-callback'} // updated this as a custom stable redirect uri
     );
     
 
     const handleLogin = async () => {
-
-        console.log('THIS IS THE REDIRECT URI:', redirectUri);
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
@@ -52,9 +43,10 @@ export default function LogInScreen() {
                 const params = Object.fromEntries(new URLSearchParams(fragment));
                 const access_token = params['access_token'];
                 const refresh_token = params['refresh_token'];
-                // console.log('Parsed tokens:', { access_token, refresh_token });
+                // never log these: device logs are readable off a connected phone
                 if (access_token && refresh_token) {
-                    const { data: sessionData, error: setSessionError } = await supabase.auth.setSession({
+                    // AuthContext's onAuthStateChange listener picks the session up
+                    const { error: setSessionError } = await supabase.auth.setSession({
                         access_token,
                         refresh_token,
                     });
@@ -70,60 +62,46 @@ export default function LogInScreen() {
         }
 
 
-        if (result.type === 'success') {
-            console.log('Waiting for session data...');
-        } else {
-            console.warn('Login cancelled or failed:', result);
+        if (result.type !== 'success') {
+            console.warn('Login cancelled or failed:', result.type);
         }
-
-        const { data: session } = await supabase.auth.getSession();
-        console.log('📦 Manual session check:', session);
-
     };
 
     return (
-        <View className="flex-1 bg-white">
+        <View style={{ flex: 1, backgroundColor: BRAND_CREAM }}>
 
             <View className="mt-20 items-center justify-center py-10">
-                {/* <Text className="text-brand-purple font-display-bold text-5xl">Willie's Wallet</Text> */}
                 <Image source={require('../assets/images/loginpagesplash.png')} className="h-1/2 w-1/2" resizeMode="contain"/>
             </View>
 
-            <View className="mt-0 items-center justify-center gap-5 px-8">
+            <View style={{ alignItems: 'center', gap: 20, paddingHorizontal: 32 }}>
 
-                <TouchableOpacity
-                    className="w-full max-w-xs rounded-xl bg-brand-purple px-6 py-4 active:opacity-80"
+                <PrimaryButton
+                    label="Sign in with Northwestern Student Google Account"
                     onPress={handleLogin}
-                >
-                    <Text className="text-center font-display text-lg leading-tight text-white">
-                        Sign in with Northwestern Student Google Account
+                    style={{ alignSelf: 'stretch' }}
+                />
+
+                <Text style={{ paddingHorizontal: 16, textAlign: 'center', fontFamily: 'Figtree_400Regular', fontSize: 14, lineHeight: 20, color: BRAND_MUTED }}>
+                    By clicking the above button, you agree to our{'\n'}
+                    <Text
+                        style={{ fontFamily: 'Figtree_700Bold', color: BRAND_INK, textDecorationLine: 'underline' }}
+                        // terms of service scrollable native webview
+                        onPress={openTermsOfService}
+                    >
+                        Terms of Service
                     </Text>
-                </TouchableOpacity>
 
-                <View>
-                    <Text className="px-8 text-center font-body text-sm leading-tight text-brand-purple-soft">
+                    {' '}and{' '}
 
-                        By clicking the above button, you agree to our{'\n'}
-                        <Text
-                            className="font-body-bold text-brand-purple"
-                            // terms of service scrollable native webview
-                            onPress={openTermsOfService}
-                        >
-                            Terms of Service
-                        </Text>
-
-                        {' '}and{' '}
-
-                        <Text
-                            className="font-body-bold text-brand-purple"
-                            // privacy policy scrollable native webview
-                            onPress={openPrivacyPolicy}
-                        >
-                            Privacy Policy
-                        </Text>
-
+                    <Text
+                        style={{ fontFamily: 'Figtree_700Bold', color: BRAND_INK, textDecorationLine: 'underline' }}
+                        // privacy policy scrollable native webview
+                        onPress={openPrivacyPolicy}
+                    >
+                        Privacy Policy
                     </Text>
-                </View>
+                </Text>
 
             </View>
 

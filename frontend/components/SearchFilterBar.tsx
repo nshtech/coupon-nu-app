@@ -2,21 +2,12 @@ import { useMemo, useState } from 'react';
 import { View, Text, TextInput, Pressable, ScrollView, Modal, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import {
-  Check,
-  Coffee,
-  Dumbbell,
-  LucideIcon,
-  Search,
-  ShoppingBag,
-  SlidersHorizontal,
-  Sparkles,
-  Ticket,
-  Utensils,
-  X,
-} from 'lucide-react-native';
-import TactileButton from '@/components/TactileButton';
-import { BRAND_CREAM, BRAND_PURPLE, BRAND_PURPLE_SOFT, CARD_SHADOW } from '@/constants/Colors';
+import Chip from '@/components/ui/Chip';
+import Display from '@/components/ui/Display';
+import Icon, { IconName } from '@/components/ui/Icon';
+import { Raised } from '@/components/ui/Raised';
+import { PrimaryButton, TextButton } from '@/components/ui/Button';
+import { BRAND_CREAM, BRAND_INK, BRAND_LILAC, BRAND_MUTED, OUTLINE, SHADOW_SM, WHITE } from '@/constants/Colors';
 import {
   CouponFilters,
   EMPTY_FILTERS,
@@ -32,71 +23,37 @@ import {
 // chips apply on tap; "Filters" opens a sheet with every option and a
 // "Show N deals" button, so nothing changes under the user until they confirm.
 
-const PLACE_TYPE_ICONS: Record<PlaceType, LucideIcon> = {
-  food: Utensils,
-  coffee: Coffee,
-  fitness: Dumbbell,
-  beauty: Sparkles,
-  shopping: ShoppingBag,
-  fun: Ticket,
+const PLACE_TYPE_ICONS: Record<PlaceType, IconName> = {
+  food: 'food',
+  coffee: 'coffee',
+  treats: 'treats',
+  fitness: 'fitness',
+  beauty: 'beauty',
+  shopping: 'shopping',
+  fun: 'fun',
 };
 
-const tick = () => Haptics.selectionAsync().catch(() => {});
+// horizontal page padding the chip row bleeds past
+const GUTTER = 16;
 
-function QuickChip({
-  label,
-  selected,
-  onPress,
-  icon: Icon,
-  badge,
-  trailingX,
-  accessibilityLabel,
-}: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-  icon?: LucideIcon;
-  badge?: number;
-  trailingX?: boolean;
-  accessibilityLabel?: string;
-}) {
-  const color = selected ? '#ffffff' : BRAND_PURPLE;
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? label}
-      accessibilityState={{ selected }}
-      className={`h-10 flex-row items-center rounded-full border px-3.5 active:opacity-80 ${selected ? 'border-brand-purple bg-brand-purple' : 'border-brand-tan bg-white'}`}
-    >
-      {Icon ? <Icon size={16} color={color} strokeWidth={2.25} /> : null}
-      <Text className={`font-display-medium text-sm ${Icon ? 'ml-1.5' : ''} ${selected ? 'text-white' : 'text-brand-purple'}`}>
-        {label}
-      </Text>
-      {badge ? (
-        <View className="ml-1.5 h-5 min-w-5 items-center justify-center rounded-full bg-brand-cream px-1">
-          <Text className="font-display text-xs text-brand-purple">{badge}</Text>
-        </View>
-      ) : null}
-      {trailingX ? <X size={14} color={color} strokeWidth={2.5} style={{ marginLeft: 6 }} /> : null}
-    </Pressable>
-  );
-}
+const tick = () => Haptics.selectionAsync().catch(() => {});
 
 function OptionRow({
   label,
   selected,
   onPress,
   kind,
-  icon: Icon,
+  icon,
   count,
+  divider,
 }: {
   label: string;
   selected: boolean;
   onPress: () => void;
   kind: 'checkbox' | 'radio';
-  icon?: LucideIcon;
+  icon?: IconName;
   count?: number;
+  divider?: boolean;
 }) {
   return (
     <Pressable
@@ -104,30 +61,51 @@ function OptionRow({
       accessibilityRole={kind}
       accessibilityState={{ checked: selected }}
       accessibilityLabel={count === undefined ? label : `${label}, ${count} deal${count === 1 ? '' : 's'}`}
-      className="min-h-14 flex-row items-center border-b border-brand-cream py-2 active:opacity-70"
+      style={{
+        minHeight: 54,
+        justifyContent: 'center',
+        paddingVertical: 8,
+        borderTopWidth: divider ? 2 : 0,
+        borderTopColor: BRAND_LILAC,
+      }}
     >
-      {Icon ? (
-        <View className="mr-3 h-9 w-9 items-center justify-center rounded-full bg-brand-cream-soft">
-          <Icon size={18} color={BRAND_PURPLE} strokeWidth={2.25} />
+      {({ pressed }) => (
+      <View style={{ flexDirection: 'row', alignItems: 'center', opacity: pressed ? 0.6 : 1 }}>
+      {icon ? (
+        <View style={{ marginRight: 14 }}>
+          <Icon name={icon} size={22} />
         </View>
       ) : null}
-      <Text className="flex-1 font-body-medium text-base text-brand-ink">{label}</Text>
-      {count !== undefined ? <Text className="mr-3 font-body text-sm text-brand-purple-soft">{count}</Text> : null}
+      <Text style={{ flex: 1, fontFamily: 'Figtree_700Bold', fontSize: 17, color: BRAND_INK }}>{label}</Text>
+      {count !== undefined ? (
+        <Text style={{ marginRight: 12, fontFamily: 'Figtree_600SemiBold', fontSize: 15, color: BRAND_MUTED }}>{count}</Text>
+      ) : null}
       <View
-        className={`h-6 w-6 items-center justify-center border-2 ${kind === 'radio' ? 'rounded-full' : 'rounded-md'} ${selected ? 'border-brand-purple bg-brand-purple' : 'border-purple-30 bg-white'}`}
+        style={{
+          width: 26,
+          height: 26,
+          borderRadius: kind === 'radio' ? 13 : 7,
+          borderWidth: OUTLINE,
+          borderColor: BRAND_INK,
+          backgroundColor: selected ? BRAND_INK : WHITE,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
       >
-        {selected ? <Check size={14} color={BRAND_CREAM} strokeWidth={3} /> : null}
+        {selected ? <Icon name="check" size={16} color={BRAND_CREAM} strokeWidth={3} /> : null}
       </View>
+      </View>
+      )}
     </Pressable>
   );
 }
 
 function SheetSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <View className="mt-6">
-      <Text accessibilityRole="header" className="mb-1 font-display text-lg text-brand-purple">
+    <View style={{ marginTop: 24 }}>
+      <Display accessibilityRole="header" size={22} style={{ marginBottom: 4 }}>
         {title}
-      </Text>
+      </Display>
       {children}
     </View>
   );
@@ -163,52 +141,65 @@ export default function SearchFilterBar({ filters, onChange, coupons, placeholde
 
   return (
     <View>
-      <View className="h-12 flex-row items-center rounded-2xl border border-brand-tan bg-white px-3.5" style={CARD_SHADOW}>
-        <Search size={18} color={BRAND_PURPLE_SOFT} />
-        <TextInput
-          value={filters.query}
-          onChangeText={query => onChange({ ...filters, query })}
-          placeholder={placeholder}
-          placeholderTextColor={BRAND_PURPLE_SOFT}
-          returnKeyType="search"
-          autoCorrect={false}
-          clearButtonMode="never"
-          accessibilityLabel={placeholder}
-          className="ml-2 h-full flex-1 font-body text-base text-brand-ink"
-        />
-        {filters.query ? (
-          <Pressable
-            onPress={() => onChange({ ...filters, query: '' })}
-            accessibilityRole="button"
-            accessibilityLabel="Clear search"
-            hitSlop={12}
-          >
-            <X size={18} color={BRAND_PURPLE_SOFT} />
-          </Pressable>
-        ) : null}
-      </View>
+      <Raised radius={26} offset={SHADOW_SM} style={{ marginRight: SHADOW_SM }}>
+        <View
+          style={{
+            height: 52,
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: 18,
+            borderRadius: 26,
+            borderWidth: OUTLINE,
+            borderColor: BRAND_INK,
+            backgroundColor: WHITE,
+          }}
+        >
+          <Icon name="search" size={22} color={BRAND_MUTED} strokeWidth={2.5} />
+          <TextInput
+            value={filters.query}
+            onChangeText={query => onChange({ ...filters, query })}
+            placeholder={placeholder}
+            placeholderTextColor={BRAND_MUTED}
+            returnKeyType="search"
+            autoCorrect={false}
+            clearButtonMode="never"
+            accessibilityLabel={placeholder}
+            style={{ flex: 1, height: '100%', marginLeft: 10, fontFamily: 'Figtree_500Medium', fontSize: 17, color: BRAND_INK }}
+          />
+          {filters.query ? (
+            <Pressable
+              onPress={() => onChange({ ...filters, query: '' })}
+              accessibilityRole="button"
+              accessibilityLabel="Clear search"
+              hitSlop={12}
+            >
+              <Icon name="close" size={20} color={BRAND_MUTED} strokeWidth={2.5} />
+            </Pressable>
+          ) : null}
+        </View>
+      </Raised>
 
       {/* bleeds past the screen padding so chips scroll edge to edge */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        style={{ marginHorizontal: -20, marginTop: 12 }}
-        contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}
+        style={{ marginHorizontal: -GUTTER, marginTop: 14 }}
+        contentContainerStyle={{ paddingHorizontal: GUTTER, gap: 8 }}
       >
-        <QuickChip
+        <Chip
           label="Filters"
-          icon={SlidersHorizontal}
+          icon="filters"
           selected={activeCount > 0}
-          badge={activeCount || undefined}
+          count={activeCount || undefined}
           onPress={openSheet}
           accessibilityLabel={activeCount ? `Filters, ${activeCount} applied` : 'Filters'}
         />
         {filters.usage !== 'all' && usageLabel ? (
-          <QuickChip
+          <Chip
             label={usageLabel}
             selected
-            trailingX
+            removable
             onPress={() => {
               tick();
               onChange({ ...filters, usage: 'all' });
@@ -217,7 +208,7 @@ export default function SearchFilterBar({ filters, onChange, coupons, placeholde
           />
         ) : null}
         {placeTypes.map(type => (
-          <QuickChip
+          <Chip
             key={type.key}
             label={type.label}
             icon={PLACE_TYPE_ICONS[type.key]}
@@ -237,32 +228,53 @@ export default function SearchFilterBar({ filters, onChange, coupons, placeholde
         presentationStyle="pageSheet"
         onRequestClose={() => setIsSheetOpen(false)}
       >
-        <View className="flex-1 bg-white" style={{ paddingTop: Platform.OS === 'android' ? insets.top : 0 }}>
-          <View className="flex-row items-center justify-between border-b border-brand-cream px-5 py-3">
-            <View className="w-11" />
-            <Text accessibilityRole="header" className="font-display text-xl text-brand-purple">
+        <View style={{ flex: 1, backgroundColor: BRAND_CREAM, paddingTop: Platform.OS === 'android' ? insets.top : 0 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              borderBottomWidth: OUTLINE,
+              borderBottomColor: BRAND_INK,
+            }}
+          >
+            <View style={{ width: 40 }} />
+            <Display accessibilityRole="header" size={24}>
               Filters
-            </Text>
+            </Display>
             <Pressable
               onPress={() => setIsSheetOpen(false)}
               accessibilityRole="button"
               accessibilityLabel="Close filters"
-              className="h-11 w-11 items-center justify-center rounded-full bg-brand-cream-soft active:opacity-70"
+              hitSlop={4}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                borderWidth: OUTLINE,
+                borderColor: BRAND_INK,
+                backgroundColor: WHITE,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
-              <X size={20} color={BRAND_PURPLE} />
+              <Icon name="close" size={20} />
             </Pressable>
           </View>
 
-          <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}>
             {placeTypes.length > 0 ? (
               <SheetSection title="Place type">
-                {placeTypes.map(type => (
+                {placeTypes.map((type, index) => (
                   <OptionRow
                     key={type.key}
                     kind="checkbox"
                     label={type.label}
                     icon={PLACE_TYPE_ICONS[type.key]}
                     count={type.count}
+                    divider={index > 0}
                     selected={draft.placeTypes.includes(type.key)}
                     onPress={() => {
                       tick();
@@ -274,11 +286,12 @@ export default function SearchFilterBar({ filters, onChange, coupons, placeholde
             ) : null}
 
             <SheetSection title="Coupon type">
-              {USAGE_OPTIONS.map(option => (
+              {USAGE_OPTIONS.map((option, index) => (
                 <OptionRow
                   key={option.key}
                   kind="radio"
                   label={option.label}
+                  divider={index > 0}
                   selected={draft.usage === option.key}
                   onPress={() => {
                     tick();
@@ -290,28 +303,29 @@ export default function SearchFilterBar({ filters, onChange, coupons, placeholde
           </ScrollView>
 
           <View
-            className="flex-row items-center gap-4 border-t border-brand-cream bg-white px-5 pt-4"
-            style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 16,
+              paddingHorizontal: 20,
+              paddingTop: 16,
+              paddingBottom: Math.max(insets.bottom, 16),
+              borderTopWidth: OUTLINE,
+              borderTopColor: BRAND_INK,
+              backgroundColor: BRAND_CREAM,
+            }}
           >
-            <Pressable
+            <TextButton
+              label="Clear all"
+              underline
               onPress={() => {
                 tick();
                 setDraft({ ...EMPTY_FILTERS, query: filters.query });
               }}
               disabled={countActiveFilters(draft) === 0}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: countActiveFilters(draft) === 0 }}
-              hitSlop={8}
-              className="py-2"
-            >
-              <Text
-                className={`font-display-medium text-base underline ${countActiveFilters(draft) === 0 ? 'text-purple-30' : 'text-brand-purple'}`}
-              >
-                Clear all
-              </Text>
-            </Pressable>
-            <TactileButton
-              className="flex-1"
+            />
+            <PrimaryButton
+              style={{ flex: 1 }}
               label={draftResultCount === 0 ? 'No matching deals' : `Show ${draftResultCount} deal${draftResultCount === 1 ? '' : 's'}`}
               disabled={draftResultCount === 0}
               onPress={applyDraft}

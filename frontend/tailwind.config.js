@@ -1,54 +1,46 @@
 /** @type {import('tailwindcss').Config} */
+// Willie's Wallet design tokens (matches the website). Mirrored as constants in
+// constants/Colors.ts for places that need a raw value (icons, native props).
 module.exports = {
   content: ["./app/**/*.{js,ts,jsx,tsx}", "./components/**/*.{js,ts,jsx,tsx}"],
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
       colors: {
-        // Willie's Wallet palette (design rework values)
-        'brand-purple': '#4e2078',
-        'brand-purple-mid': '#7b6496',
-        'brand-purple-soft': '#8b75a1',
-        'brand-cream': '#fceac3',
-        'brand-cream-soft': '#fff8eb',
-        'brand-tan': '#d4b267',
-        'brand-peach': '#efc6a4',
-        'brand-lavender': '#f1e6f8',
-        'brand-mint': '#e3efe6',
-        'brand-yellow': '#ffd25e',
-        'brand-danger': '#b42318',
-        'brand-ink': '#28173b',
-
-        // legacy tokens, repointed onto the brand palette
-        'nu-purple': '#4e2078',
-        'purple-80': '#4e2078',
-        'purple-70': '#523080',
-        'purple-60': '#634296',
-        'purple-50': '#7b6496',
-        'purple-40': '#8a7aa2',
-        'purple-30': '#a496b5',
-        'purple-20': '#c4b9cf',
-        'purple-like-gray': '#a496b5',
-        'dark-gray': '#6f6379',
+        'brand-cream': '#FFF7EA', // app and sheet background
+        'brand-ink': '#22103D', // all text, every outline, every hard shadow
+        'brand-purple': '#401F68', // headers, avatar, Willie's speech
+        'brand-purple-mid': '#5A3888', // circle behind Willie on purple
+        'brand-yellow': '#FFC93C', // the one accent: primary button, student pass
+        'brand-yellow-soft': '#FFE9A8', // highlighter behind "1 use left"
+        'brand-green': '#1F7A45', // success and "Unlimited" only
+        'brand-lilac': '#E9E2F4', // soft panels, onboarding art, dividers
+        'brand-lilac-text': '#EDE4F7', // body text on purple
+        'brand-muted': '#4A3A63', // secondary text, inactive tabs
+        'brand-willie': '#8C78A4', // active tab icon fill
+        'brand-willie-fluff': '#FAE8C5', // Willie's cheek and tail tufts
+        'brand-willie-fluff-shade': '#ECC8A6',
+        'brand-heart': '#D42C6F', // saved heart
+        'brand-danger': '#B42318', // destructive row text only
       },
       fontFamily: {
-        // display — TT Masters stand-in
-        'display': ['Fredoka_600SemiBold'],
-        'display-medium': ['Fredoka_500Medium'],
-        'display-bold': ['Fredoka_700Bold'],
-        // body — Aileron / Ubuntu
-        'body': ['Ubuntu_400Regular'],
-        'body-medium': ['Ubuntu_500Medium'],
-        'body-bold': ['Ubuntu_700Bold'],
-        // legacy aliases (incl. the previously undefined font-inter-regular)
-        'inter': ['Ubuntu_400Regular'],
-        'inter-regular': ['Ubuntu_400Regular'],
-        'inter-medium': ['Ubuntu_500Medium'],
-        'inter-bold': ['Ubuntu_700Bold'],
+        // Bricolage Grotesque 800: headlines, offers, names, countdown. Always
+        // uppercase; prefer the Display component, which also sets tracking.
+        'display': ['BricolageGrotesque_800ExtraBold'],
+        'display-lg': ['BricolageGrotesqueDisplay_800ExtraBold'],
+        // Figtree: everything else. 700 is the heaviest weight.
+        'body': ['Figtree_400Regular'],
+        'body-medium': ['Figtree_500Medium'],
+        'body-semibold': ['Figtree_600SemiBold'],
+        'body-bold': ['Figtree_700Bold'],
+        // Willie's speech bubbles only (Chewy stands in for Biski / Lazydog)
+        'bubble': ['Chewy_400Regular'],
       },
       borderRadius: {
-        'card': '24px',
-        'sheet': '32px',
+        'card': '22px',
+        'panel': '28px',
+        'sheet': '30px',
+        'badge': '12px',
       },
     },
   },

@@ -1,7 +1,8 @@
 import { useMemo, useRef } from 'react';
-import { View, Text, Animated, ActivityIndicator } from 'react-native';
+import { View, Animated, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import BrandHeader from '@/components/BrandHeader';
+import { ListHead } from '@/components/CouponListScreen';
 import CouponHistoryCard from '@/components/CouponHistoryCard';
 import CouponSkeleton from '@/components/CouponSkeleton';
 import EmptyState from '@/components/EmptyState';
@@ -9,7 +10,7 @@ import WagTail, { useTailRefresh } from '@/components/WagTail';
 import { useCoupons } from '@/contexts/CouponsContext';
 import { useUsage } from '@/contexts/UsageContext';
 import { useAppText } from '@/utils/appText';
-import { BRAND_PURPLE_SOFT } from '@/constants/Colors';
+import { BRAND_CREAM, BRAND_INK } from '@/constants/Colors';
 
 // Used: every coupon the user has redeemed at least once, newest first.
 export default function Used() {
@@ -38,8 +39,8 @@ export default function Used() {
   const renderBody = () => {
     if (isLoading) {
       return (
-        <View className="items-center pt-16">
-          <ActivityIndicator size="large" color={BRAND_PURPLE_SOFT} />
+        <View style={{ alignItems: 'center', paddingTop: 64 }}>
+          <ActivityIndicator size="large" color={BRAND_INK} />
         </View>
       );
     }
@@ -58,10 +59,8 @@ export default function Used() {
     }
     return (
       <>
-        <Text className="mb-3 font-display-medium text-xs uppercase tracking-widest text-brand-purple-soft">
-          {history.length} coupon{history.length === 1 ? '' : 's'} used
-        </Text>
-        <View className="gap-3">
+        <ListHead count={history.length} label={`coupon${history.length === 1 ? '' : 's'} used`} />
+        <View style={{ gap: 10 }}>
           {history.map(entry => (
             <View key={entry.coupon.coupon_id}>
               <CouponHistoryCard {...entry} />
@@ -74,15 +73,15 @@ export default function Used() {
   };
 
   return (
-    <View className="flex-1 bg-brand-cream-soft">
+    <View style={{ flex: 1, backgroundColor: BRAND_CREAM }}>
       {/* drawn above the list so Willie's tail can tuck behind it */}
       <View style={{ zIndex: 1 }}>
         <BrandHeader headline={headline} />
       </View>
-      <View className="flex-1">
+      <View style={{ flex: 1 }}>
         <Animated.ScrollView
-          className="flex-1"
-          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 32 }}
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 32 }}
           onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
           scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}

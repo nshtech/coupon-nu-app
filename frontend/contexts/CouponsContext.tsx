@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUsage } from '@/contexts/UsageContext';
@@ -51,58 +51,71 @@ const buildUserCouponToLastUsedAt = (usedCouponData: any[]): Map<number, string>
 
 export function CouponsProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();
+    // keyed on the id, not the user object: a token refresh is not a reason to re-fetch
+    const userId = user?.id ?? null;
     const { userCouponToUsages, setUserCouponToUsages, setUserCouponToLastUsedAt } = useUsage();
 
     const [allCoupons, setAllCoupons] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [loadError, setLoadError] = useState<string | null>(null);
-
-    // fetch coupon usages for the user, and feed to the map building helpers
-    const fetchCouponUsages = async (userId: string) => {
-        const { data: couponUsagesData, error: couponUsagesError } = await supabase
-            .from('coupon_usages')
-            .select('coupon_id, used_at')
-            .eq('user_id', userId);
-
-        if (couponUsagesError) {
-            console.error('Error fetching coupon usages:', couponUsagesError);
-            throw couponUsagesError;
-        }
-        setUserCouponToUsages(buildUserCouponToUsages(couponUsagesData));
-        setUserCouponToLastUsedAt(buildUserCouponToLastUsedAt(couponUsagesData));
-    }
-
-    const fetchAllCoupons = async () => {
-        const { data, error: couponsError } = await supabase
-            .from('coupons')
-            .select('*')
-            .order('vendor', { ascending: true });
-
-        if (couponsError) {
-            console.error('Error fetching coupons:', couponsError);
-            throw couponsError;
-        }
-        setAllCoupons(data ?? []);
-    }
+    // the account the latest load is for; answers for an earlier account are dropped
+    const activeUserIdRef = useRef<string | null>(userId);
+    activeUserIdRef.current = userId;
 
     const refresh = useCallback(async () => {
-        if (!user) return;
+        if (!userId) return;
         setLoadError(null);
-        const results = await Promise.allSettled([fetchAllCoupons(), fetchCouponUsages(user.id)]);
-        if (results.some(result => result.status === 'rejected')) {
-            setLoadError("We couldn't load your coupons. Check your connection and try again.");
+
+        const loadFailed = "We couldn't load your coupons. Check your connection and try again.";
+
+        // both requests go out together; RLS also limits coupon_usages to this user.
+        // Never rejects: pull-to-refresh awaits this without a catch.
+        let couponsResult, usagesResult;
+        try {
+            [couponsResult, usagesResult] = await Promise.all([
+                // select('*') on purpose: optional columns (short_offer, photo_url, ...)
+                // may or may not exist yet, and naming a missing one fails the query
+                supabase.from('coupons').select('*').order('vendor', { ascending: true }),
+                supabase.from('coupon_usages').select('coupon_id, used_at').eq('user_id', userId),
+            ]);
+        } catch (err) {
+            console.error('Error loading coupons:', err);
+            if (activeUserIdRef.current === userId) setLoadError(loadFailed);
+            return;
         }
-    }, [user]);
+        if (activeUserIdRef.current !== userId) return;
+
+        if (couponsResult.error) {
+            console.error('Error fetching coupons:', couponsResult.error);
+        } else {
+            setAllCoupons(couponsResult.data ?? []);
+        }
+
+        if (usagesResult.error) {
+            console.error('Error fetching coupon usages:', usagesResult.error);
+        } else {
+            setUserCouponToUsages(buildUserCouponToUsages(usagesResult.data));
+            setUserCouponToLastUsedAt(buildUserCouponToLastUsedAt(usagesResult.data));
+        }
+
+        if (couponsResult.error || usagesResult.error) {
+            setLoadError(loadFailed);
+        }
+    }, [userId, setUserCouponToUsages, setUserCouponToLastUsedAt]);
 
     useEffect(() => {
-        if (user) {
+        if (userId) {
             setIsLoading(true);
             refresh().finally(() => setIsLoading(false));
         } else {
+            // signed out: drop the previous account's history along with the list
             setAllCoupons([]);
+            setUserCouponToUsages(new Map());
+            setUserCouponToLastUsedAt(new Map());
+            setLoadError(null);
             setIsLoading(false);
         }
-    }, [user]);
+    }, [userId]);
 
     // a coupon is active until its usage count reaches usage_limit (0 = unlimited)
     const isCouponActive = useCallback((coupon: any) => {
@@ -118,7 +131,7 @@ export function CouponsProvider({ children }: { children: ReactNode }) {
         return { activeCoupons: active, expiredCoupons: expired };
     }, [allCoupons, isCouponActive]);
 
-    const contextValue: CouponsContextType = {
+    const contextValue = useMemo<CouponsContextType>(() => ({
         allCoupons,
         activeCoupons,
         expiredCoupons,
@@ -126,7 +139,7 @@ export function CouponsProvider({ children }: { children: ReactNode }) {
         loadError,
         isCouponActive,
         refresh,
-    };
+    }), [allCoupons, activeCoupons, expiredCoupons, isLoading, loadError, isCouponActive, refresh]);
 
     return (
         <CouponsContext.Provider value={contextValue}>

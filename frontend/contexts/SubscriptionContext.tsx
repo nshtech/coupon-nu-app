@@ -258,21 +258,28 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
         const { data, error } = await supabase
             .from('subscriptions')
-            .select('*')
+            .select('is_subscribed, subscription_expiration')
             .eq('user_id', currentUser.id)
-            .single();
+            .maybeSingle();
 
         if (error) {
-            // `.single()` errors when no row exists, which is the normal "never subscribed" case.
-            console.log('[SubscriptionProvider] No subscription row:', error.message);
+            console.error('[SubscriptionProvider] Could not read subscription:', error.message);
             return false;
         }
 
-        if (data?.is_subscribed) {
-            console.log('[SubscriptionProvider] Subscription loaded from Supabase');
+        // no row is the normal "never subscribed" case; leave state alone, a pass
+        // unlocked from RevenueCat may already be showing
+        if (!data) return false;
+
+        // access = is_subscribed AND not past subscription_expiration. A row with no
+        // date (e.g. one added by hand in the table editor) does not expire.
+        const expiration = data.subscription_expiration ? new Date(data.subscription_expiration) : null;
+        const isActive = !!data.is_subscribed && (!expiration || expiration.getTime() > Date.now());
+
+        if (isActive) {
             if (isMountedRef.current) {
                 setIsSubscribed(true);
-                setSubscriptionExpiration(data.subscription_expiration ? new Date(data.subscription_expiration) : null);
+                setSubscriptionExpiration(expiration);
             }
             isSubscribedRef.current = true;
             return true;
@@ -517,6 +524,9 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
     // Initial load: identify the user to RevenueCat, read Supabase, and fall back to
     // RevenueCat if Supabase has nothing (new device, reinstall, code redeemed elsewhere).
+    // Keyed on the id, not the user object: a token refresh must not re-run this
+    // (it would flash the loading state over an open coupon sheet).
+    const userId = user?.id ?? null;
     useEffect(() => {
         let cancelled = false;
 
@@ -525,13 +535,18 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
             setIsSubscriptionLoading(true);
 
             (async () => {
+                // the Supabase read doesn't need RevenueCat, so it runs alongside logIn
+                const subscriptionRead = getSubscription().catch((err) => {
+                    console.error('[SubscriptionProvider] Subscription read failed:', err);
+                    return false;
+                });
                 const isIdentified = await ensureRevenueCatUser(user.id);
                 if (cancelled) return;
 
                 // the paywall's price, for this account; does not hold up the access check
                 void loadPassPackage(isIdentified);
 
-                const unlocked = await getSubscription();
+                const unlocked = await subscriptionRead;
                 if (cancelled || unlocked) return;
 
                 await refreshEntitlement();
@@ -563,7 +578,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         }
 
         return () => { cancelled = true; };
-    }, [user]);
+    }, [userId]);
 
     const contextValue: SubscriptionContextType = {
         isSubscribed,

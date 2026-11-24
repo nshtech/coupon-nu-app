@@ -1,31 +1,53 @@
 import { useMemo, useRef, useState } from 'react';
-import { View, Text, Animated, ActivityIndicator, Pressable } from 'react-native';
+import { View, Text, Animated, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BrandLockup } from '@/components/BrandHeader';
+import { ImageSource } from 'expo-image';
+import { BrandLockup, HeaderHeadline } from '@/components/BrandHeader';
 import SearchFilterBar from '@/components/SearchFilterBar';
 import CouponThumbnail from '@/components/CouponThumbnail';
 import CouponSkeleton from '@/components/CouponSkeleton';
 import EmptyState from '@/components/EmptyState';
 import WagTail, { useTailRefresh } from '@/components/WagTail';
+import { DarkButton } from '@/components/ui/Button';
 import { useCoupons } from '@/contexts/CouponsContext';
-import { BRAND_PURPLE_SOFT } from '@/constants/Colors';
+import { BRAND_CREAM, BRAND_INK, BRAND_MUTED, BRAND_PURPLE, OUTLINE, RADIUS, WHITE } from '@/constants/Colors';
 import { EMPTY_FILTERS, applyCouponFilters, countActiveFilters } from '@/utils/couponFilters';
 
 // Header + search/filter + coupon cards, shared by the Discover and Saved tabs.
 // The header and search bar float over the cards. Scrolling down folds the
-// headline away, leaving a short purple bar with just the logo; pulling down
-// moves the whole header with the cards, and Willie's tail drops from under the
-// purple and wags while the refresh runs, in place of a spinner.
+// headline away, leaving a short purple bar with just the wordmark; pulling
+// down moves the whole header with the cards, and Willie's tail drops from
+// under the purple and wags while the refresh runs, in place of a spinner.
+
+const GUTTER = 16;
 
 type CouponListScreenProps = {
   headline: string;
   // the tab's coupons before search and filters are applied
   coupons: any[];
-  emptyState: { title: string; message: string; actionLabel?: string; onAction?: () => void };
+  // words after the count above the list: "30 deals this quarter", "3 saved"
+  countLabel: (count: number) => string;
+  emptyState: { title: string; message: string; actionLabel?: string; onAction?: () => void; image?: ImageSource | number };
   searchPlaceholder?: string;
 };
 
-export default function CouponListScreen({ headline, coupons, emptyState, searchPlaceholder }: CouponListScreenProps) {
+export function ListHead({ count, label }: { count: number; label: string }) {
+  return (
+    <Text
+      accessibilityLiveRegion="polite"
+      style={{ marginBottom: 10, fontFamily: 'Figtree_600SemiBold', fontSize: 14, color: BRAND_MUTED }}
+    >
+      <Text
+        style={{ fontFamily: 'BricolageGrotesque_800ExtraBold', fontSize: 20, letterSpacing: -0.4, color: BRAND_INK }}
+      >
+        {count}
+      </Text>{' '}
+      {label}
+    </Text>
+  );
+}
+
+export default function CouponListScreen({ headline, coupons, countLabel, emptyState, searchPlaceholder }: CouponListScreenProps) {
   const { isLoading, loadError, refresh, isCouponActive, allCoupons } = useCoupons();
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const { isRefreshing, handleRefresh, onScrollEndDrag, refreshControl } = useTailRefresh(refresh);
@@ -44,7 +66,7 @@ export default function CouponListScreen({ headline, coupons, emptyState, search
         extrapolateLeft: 'extend',
         extrapolateRight: 'clamp',
       }),
-      // cancels the overlay's upward move so the logo stays in place
+      // cancels the overlay's upward move so the wordmark stays in place
       logo: scrollY.interpolate({ inputRange: [0, distance], outputRange: [0, distance], extrapolate: 'clamp' }),
       headlineOpacity: scrollY.interpolate({ inputRange: [0, distance * 0.5], outputRange: [1, 0], extrapolate: 'clamp' }),
     };
@@ -56,9 +78,9 @@ export default function CouponListScreen({ headline, coupons, emptyState, search
   const renderBody = () => {
     if (isLoading) {
       return (
-        <View className="items-center pt-16" accessibilityLiveRegion="polite">
-          <ActivityIndicator size="large" color={BRAND_PURPLE_SOFT} />
-          <Text className="mt-3 font-display text-lg text-brand-purple-soft">Loading deals...</Text>
+        <View style={{ alignItems: 'center', paddingTop: 64 }} accessibilityLiveRegion="polite">
+          <ActivityIndicator size="large" color={BRAND_INK} />
+          <Text style={{ marginTop: 12, fontFamily: 'Figtree_700Bold', fontSize: 17, color: BRAND_MUTED }}>Loading deals...</Text>
         </View>
       );
     }
@@ -89,28 +111,28 @@ export default function CouponListScreen({ headline, coupons, emptyState, search
         {loadError ? (
           // a failed refresh keeps the last list on screen; say so without hiding it
           <View
-            className="mb-3 flex-row items-center rounded-card border border-brand-tan bg-white px-4 py-3"
+            style={{
+              marginBottom: 12,
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              borderRadius: RADIUS.card,
+              borderWidth: OUTLINE,
+              borderColor: BRAND_INK,
+              backgroundColor: WHITE,
+            }}
             accessibilityLiveRegion="polite"
           >
-            <Text className="flex-1 pr-3 font-body text-sm text-brand-ink">{loadError}</Text>
-            <Pressable
-              onPress={handleRefresh}
-              accessibilityRole="button"
-              className="min-h-11 justify-center rounded-full bg-brand-purple px-4 active:opacity-80"
-            >
-              <Text className="font-display-medium text-sm text-brand-cream">Try again</Text>
-            </Pressable>
+            <Text style={{ flex: 1, paddingRight: 12, fontFamily: 'Figtree_500Medium', fontSize: 14, color: BRAND_INK }}>{loadError}</Text>
+            <DarkButton label="Try again" onPress={handleRefresh} size="sm" />
           </View>
         ) : null}
-        <View className="mb-3 flex-row items-baseline justify-between">
-          <Text className="font-display-medium text-xs uppercase tracking-widest text-brand-purple-soft" accessibilityLiveRegion="polite">
-            {isFiltering
-              ? `${visibleCoupons.length} of ${coupons.length} deals`
-              : `${coupons.length} deal${coupons.length === 1 ? '' : 's'}`}
-          </Text>
-          <Text className="font-body text-xs text-brand-purple-soft">Tap one for details</Text>
-        </View>
-        <View className="gap-4">
+        <ListHead
+          count={visibleCoupons.length}
+          label={isFiltering ? `of ${coupons.length} deals` : countLabel(coupons.length)}
+        />
+        <View style={{ gap: 10 }}>
           {visibleCoupons.map((coupon: any, index: number) => (
             <View key={coupon.coupon_id || index}>
               <CouponThumbnail coupon={coupon} couponTab={isCouponActive(coupon) ? 'active' : 'expired'} />
@@ -123,10 +145,10 @@ export default function CouponListScreen({ headline, coupons, emptyState, search
   };
 
   return (
-    <View className="flex-1 bg-brand-cream-soft">
+    <View style={{ flex: 1, backgroundColor: BRAND_CREAM }}>
       <Animated.ScrollView
-        className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: overlayHeight, paddingBottom: 32 }}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingHorizontal: GUTTER, paddingTop: overlayHeight + 14, paddingBottom: 32 }}
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
         scrollEventThrottle={16}
         keyboardShouldPersistTaps="handled"
@@ -139,28 +161,32 @@ export default function CouponListScreen({ headline, coupons, emptyState, search
       </Animated.ScrollView>
 
       <Animated.View
-        className="absolute left-0 right-0 top-0 bg-brand-cream-soft"
-        style={{ transform: [{ translateY: fold.overlay }] }}
+        style={{ position: 'absolute', left: 0, right: 0, top: 0, backgroundColor: BRAND_CREAM, transform: [{ translateY: fold.overlay }] }}
         onLayout={event => setOverlayHeight(event.nativeEvent.layout.height)}
       >
         <View
-          className="rounded-b-[34px] bg-brand-purple px-5"
-          style={{ zIndex: 1, paddingTop: insets.top + 8, paddingBottom: 24 }}
+          style={{
+            zIndex: 1,
+            backgroundColor: BRAND_PURPLE,
+            borderBottomWidth: OUTLINE,
+            borderBottomColor: BRAND_INK,
+            paddingHorizontal: 20,
+            paddingTop: insets.top + 8,
+            paddingBottom: 14,
+          }}
         >
           <Animated.View style={{ zIndex: 1, transform: [{ translateY: fold.logo }] }}>
             <BrandLockup />
           </Animated.View>
           <Animated.View
-            style={{ opacity: fold.headlineOpacity }}
+            style={{ opacity: fold.headlineOpacity, paddingBottom: 8 }}
             onLayout={event => setFoldDistance(event.nativeEvent.layout.height)}
           >
-            <Text accessibilityRole="header" className="mt-5 font-display text-[26px] leading-8 text-white">
-              {headline}
-            </Text>
+            <HeaderHeadline>{headline}</HeaderHeadline>
           </Animated.View>
         </View>
 
-        <View className="px-5 pb-4 pt-4">
+        <View style={{ paddingHorizontal: GUTTER, paddingTop: 16, paddingBottom: 4 }}>
           <SearchFilterBar filters={filters} onChange={setFilters} coupons={coupons} placeholder={searchPlaceholder} />
           <WagTail scrollY={scrollY} isWagging={isRefreshing} />
         </View>
